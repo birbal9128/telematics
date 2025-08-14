@@ -168,7 +168,7 @@ async function getLocationFromCoordinates(
  
  return formattedTime;
  } 
- const newData = res.data.result[0]?.data
+ const newData = res.data.result?.data
  .filter((item: any) => item.LATITUDE !== '0.000000' && item.LONGITUDE !== '0.000000'&& item.LATITUDE !== '0.0000' && item.LONGITUDE !== '0.0000' && item.LATITUDE !== 0 && item.LONGITUDE !== 0 ) 
  .map((item: any) => {
  const updatedEngineRpm = item.ENGINE_RPM < 649 ? 0 : item.ENGINE_RPM;
