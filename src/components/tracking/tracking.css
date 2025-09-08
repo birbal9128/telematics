@@ -1,0 +1,10 @@
+.custom-dot {
+    width: 8px;
+    height: 8px;
+    background-color: red; /* You can change the color */
+    border-radius: 50%; /* Makes it circular */
+    position: absolute;
+    left: 50%;
+    bottom: 4px; /* Adjust the position */
+    transform: translateX(-50%); /* Centers the dot horizontally */
+  }

@@ -28,6 +28,8 @@ const schema = zod.object({
  TractorId: zod.coerce.string(),
  TractorName: zod.coerce.string(),
  TractorNumber: zod.coerce.string(),
+ EngineNumber: zod.coerce.string(),
+ ChassisNumber: zod.coerce.string(),
 });
 export type Values = zod.infer<typeof schema>;
 
@@ -45,7 +47,9 @@ interface addTractorProps {
  defaultValues: {
  TractorId:'',
  TractorName:'',
- TractorNumber:''
+ TractorNumber:'',
+EngineNumber:'',
+ChassisNumber:''
 
  }, resolver: zodResolver(schema)
  });
@@ -138,6 +142,31 @@ interface addTractorProps {
  </FormControl>
  )}
  />
+
+<Controller
+ name="EngineNumber"
+ control={control}
+ render={({ field }) => (
+ <FormControl fullWidth>
+ <InputLabel>Engine Number</InputLabel>
+ <OutlinedInput {...field} label="Engine Number" />
+ 
+ </FormControl>
+ )}
+ />
+
+<Controller
+ name="ChassisNumber"
+ control={control}
+ render={({ field }) => (
+ <FormControl fullWidth>
+ <InputLabel>Chassis Number</InputLabel>
+ <OutlinedInput {...field} label="Chassis Number" />
+ 
+ </FormControl>
+ )}
+ />
+
 
  </Grid>
  </CardContent>

@@ -45,6 +45,7 @@ interface tractor_props{
  const[ date, setDate] = useState<string>('')
  const [today, setToday] = useState(new Date().toISOString().split('T')[0]);
  const [status, setStatus] = useState<string>("Stopped");
+ const [lastUpdatedTimestamp, setLastUpdatedTimestamp] = useState<string>('');
 
  const getStatusStyle = (status: string) => {
  switch (status) {
@@ -136,6 +137,7 @@ data.DEVICE_ID==`${tractor_id} `&&
  }
  ;
  allData.push(commingData)
+ setLastUpdatedTimestamp(data.TIME)
  console.log(allData)
  }
  
@@ -232,16 +234,16 @@ data.DEVICE_ID==`${tractor_id} `&&
  <div className="grid grid-cols-12 gap-4 md:gap-6">
  
  <div className="col-span-12 xl:col-span-6">
- <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-5">
+ <div className="grid grid-cols-1 gap-0 sm:grid-cols-2 md:gap-5">
  {/* Metric Item Start */}
  <Card sx={{ 
  borderRadius: 3, 
  boxShadow: 3, 
  transform: "scale(0.8)", 
- width: '100%' // Ensure the Card takes full width of its container
+ width: '80%' // Ensure the Card takes full width of its container
  }}>
- <CardContent>
- <Box sx={{ paddingTop: "6px" }} display="flex" justifyContent="space-between" alignItems="center">
+ <CardContent sx={{paddingLeft:'20px'}}>
+ <Box display="flex" flexDirection='column'>
  <Typography sx={{ color: "black", fontSize: "1rem" }} variant="body2" color="text.secondary">
  Tractor Number
  </Typography>
@@ -258,9 +260,10 @@ data.DEVICE_ID==`${tractor_id} `&&
  <Box
  sx={{
  width: '85px', // Increased width for the status box
- padding: '4px 12px',
- margin: '20px',
- borderRadius: '12px',
+ padding: '1px 17px',
+ margin: '10px',
+height:'25px',
+ borderRadius: '7px',
  opacity: 0.9,
  ...getStatusStyle(status), // Assuming this is a function that dynamically adjusts styles
  }}
@@ -275,21 +278,42 @@ data.DEVICE_ID==`${tractor_id} `&&
  </div>
 
 
- {/* Date Picker & Select in One Row */}
  <div className="col-span-12 xl:col-span-6">
- <div style={{padding: "18px"}} className="grid grid-cols-1 gap-4 md:gap-6">
- <div>
- <Flatpickr
- options={{
- dateFormat: "Y-m-d", // Set the date format
- }}
- placeholder="Choose a date"
- className="w-full py-2 pl-3 pr-10 text-sm border border-gray-300 rounded-md h-11 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-700 dark:text-white"
- onChange={handleDateChange} // Handle date change
- />
- </div>
- </div>
- </div>
+  <div style={{ padding: "25px" }} className="grid grid-cols-1 gap-4 md:gap-6">
+    <div className="flex gap-6 items-center">
+      {/* Date Picker */}
+      <div className="flex-1">
+        <Flatpickr
+          options={{
+            dateFormat: "Y-m-d", // Set the date format
+          }}
+          placeholder="Choose a date"
+          className="w-full py-2 pl-3 pr-10 text-sm border border-gray-300 rounded-md h-14 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+          onChange={handleDateChange} // Handle date change
+        />
+      </div>
+
+      {/* Last Updated Timestamp Box */}
+      {!lastUpdatedTimestamp && (
+        <Box
+          sx={{
+            width: '180px',
+            bgcolor: 'background.paper',
+            borderRadius: 2,
+            boxShadow: 5,
+            px: 2,
+            py: 0.5,
+          }}
+        >
+          <Typography variant="caption" color="textSecondary" >Last Updated Timestamp</Typography>
+          <Typography variant="subtitle2">
+            4:30:45 PM {lastUpdatedTimestamp}
+          </Typography>
+        </Box>
+      )}
+    </div>
+  </div>
+</div>
 
  
 

@@ -16,7 +16,15 @@ ComposedChart,
 Legend
 } from 'recharts';
 import axios from "axios";
-import { Box, Card, Divider, Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
+import { Backdrop, Box, Button, Card, CardContent, Chip, Divider, Fade, Grid, Modal, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
+import SpeedIcon from '@mui/icons-material/Speed';
+import StraightenIcon from '@mui/icons-material/Straighten';
+import AccessAlarmIcon from '@mui/icons-material/AccessAlarm';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import WhatshotIcon from '@mui/icons-material/Whatshot';
+import OpacityIcon from '@mui/icons-material/Opacity';
+import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
+import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import dayjs from 'dayjs';
 
 interface WebSocketData {
@@ -37,6 +45,14 @@ DEVICE_ID: string;
 FUEL_LEVEL: number;
 SPEED: number;
 ENGINE_RPM: number;
+BATTERY_VOLTAGE:number;
+ENG_TEMP:number;
+P2264_13:string;
+P0193_12:string;
+P0251_13:string;
+P0183_00:string;
+FUEL_TEMP:number;
+COOLANT_TEMP:number;
 }
 
 interface TableData {
@@ -54,6 +70,14 @@ LONGITUDE:string
 FUEL_LEVEL: string;
 SPEED: string;
 ENGINE_RPM: string;
+BATTERY_VOLTAGE:number;
+ENG_TEMP:string;
+P2264_13:string;
+P0193_12:string;
+P0251_13:string;
+P0183_00:string;
+FUEL_TEMP:number;
+COOLANT_TEMP:number;
 }
 
 interface GraphDataProps {
@@ -69,6 +93,13 @@ interface AssetTrackerMessage {
  SPEED: string;
  FUEL_LEVEL: string;
  ENGINE_RPM: string;
+ BATTERY_VOLTAGE:number;
+ P2264_13:string;
+ P0193_12:string;
+ P0251_13:string;
+ P0183_00:string;
+FUEL_TEMP:number;
+COOLANT_TEMP:number;
  }
 
  interface live_tractor_prop{
@@ -124,7 +155,50 @@ iconSize: [16, 16], // size of the icon
 iconAnchor: [8, 18], // point of the icon which will correspond to marker's location
 popupAnchor: [0, -16] // point from which the popup should open relative to the iconAnchor
 });
+interface DTCData {
+  code: string;
+  status: '1.000000' | '2.000000' | '0.000000' | '-1';
+  description:string;
+}
 
+interface DtcItem {
+  code: string;
+  description: string;
+  status: 'active' | 'warning' | 'ok' | string;
+  details?: string; // optional additional details
+}
+
+// Props for the component
+interface DtcModalProps {
+  dtcData: DtcItem[];
+}
+
+// Function to get the color for each status
+// const getStatusColor = (status: '1.000000' | '2.000000' | '0.000000'| '-1'): string => {
+//   switch (status) {
+//     case '1.000000':
+//       return '#D3D3D3';
+//     case '2.000000':
+//       return '#D3D3D3';
+//     case '0.000000':
+//       return '#f24646';
+//     default:
+//       return '#f5f5f5';
+//   }
+// };
+
+// const convertStatusToMessage=(status: '1.000000' | '2.000000' | '0.000000'| '-1'): string=>{
+//   switch (status) {
+//     case '1.000000':
+//       return 'OK';
+//     case '2.000000':
+//       return 'OK';
+//     case '0.000000':
+//       return 'Faulty';
+//     default:
+//       return 'No Status';
+//   }
+// }
 
 // Dynamic import for SSR fix
 const Map = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
@@ -157,18 +231,41 @@ const [Data, setData] = useState<ChartData[]>([]);
 const [brushIndices, setBrushIndices] = useState<{ startIndex: number, endIndex: number }>({ startIndex: 0, endIndex: 20 });
 const [disPositions, setDisPositions] = useState<number[][]>([]);
 const [totalDistance, setTotalDistance] = useState<number>(0);
-const [location, setLocation] = useState<string[]>([]); 
+const [location, setLocation] = useState<string[]>(["NA"]); 
 const [time, setTime] = useState<string>(); 
 const [speed, setSpeed] = useState<number>(0); 
 const [lat, setLat] = useState<number>(0);
 const [long, setLong] = useState<number>(0);
-const [HMR, setHMR] = useState<string>("0"); 
+const [engTemp, setEngTemp] = useState<number>(0);
+const [fuelTemp, setFuelTemp] = useState<number>(0);
+const [coolantTemp, setCoolantTemp] = useState<number>(0);
+const [batteryVoltage, setBatteryVoltage] = useState<number>(0);
+const [activeDTCs, setActiveDTCs] = useState<number>(0);
+const [healedDTCs, setHealedDTCs] = useState<number>(0);
+const [dtcData,setDtcData] = useState<DTCData[]>([
+  { code: 'P0183-00', status: "-1", description:'Water in Fuel'},
+  { code: 'P0193-12', status: "-1", description:'Metering Unit'},
+  { code: 'P0251-13', status: "-1", description:'Rail Pressure'},
+  { code: 'P2264-13', status: "-1", description:'Fuel Temp'},
+]);
+const [HMR, setHMR] = useState<string>("00:00:00"); 
 const [status, setStatus] = useState<string>("Stopped");
 const [tableData, setTableData] = useState<TableData[]>([]);
 
 const latRef = useRef(lat);
 const longRef = useRef(long);
+const [open, setOpen] = useState<boolean>(false);
+const [selectedDtc, setSelectedDtc] = useState<string>('');
 
+const handleOpen = (dtc: string) => {
+  setSelectedDtc(dtc);
+  setOpen(true);
+};
+
+const handleClose = () => {
+  setOpen(false);
+  setSelectedDtc('');
+};
 
  const start = tractor_id==='EKL_02'?dayjs('2025-04-04'):dayjs('2025-08-04');
  const yesterday = dayjs().subtract(1, 'day');
@@ -265,14 +362,22 @@ useEffect(() => {
  const updatedEngineRpm = item.message.ENGINE_RPM < 649 ? 0 : item.message.ENGINE_RPM;
  
  return {
- "TIME": addTimeToCurrentTime(item.message.TIME),
- "DEVICE_ID": item.message.DEVICE_ID,
- "LATITUDE": calculateDecimal(item.message.LATITUDE),
- "LONGITUDE": calculateDecimal(item.message.LONGITUDE),
- "ALTITUDE": item.message.ALTITUDE,
- "SPEED": item.message.SPEED,
- "FUEL_LEVEL": item.message.FUEL_LEVEL,
- "ENGINE_RPM": updatedEngineRpm 
+ TIME: addTimeToCurrentTime(item.message.TIME),
+ DEVICE_ID: item.message.DEVICE_ID,
+ LATITUDE: calculateDecimal(item.message.LATITUDE),
+ LONGITUDE: calculateDecimal(item.message.LONGITUDE),
+ ALTITUDE: item.message.ALTITUDE,
+ SPEED: item.message.SPEED,
+ FUEL_LEVEL: item.message.FUEL_LEVEL,
+ ENGINE_RPM: updatedEngineRpm,
+ BATTERY_VOLTAGE:item.message.BATTERY_VOLTAGE,
+ ENG_TEMP:item.message.ENG_TEMP,
+ COOLANT_TEMP:item.message.COOLANT_TEMP,
+ FUEL_TEMP:item.message.FUEL_TEMP,
+ P2264_13:item.message["P2264-13"],
+ P0251_13:item.message["P0251-13"],
+ P0193_12:item.message["P0193-12"],
+ P0183_00:item.message["P0183-00"],
  };
  })
  .filter((value: any, index: any, self: any) => {
@@ -290,11 +395,47 @@ useEffect(() => {
  setTime(lastPostion.TIME)
  const latitude = parseFloat(lastPostion?.LATITUDE); 
  const longitude = parseFloat(lastPostion?.LONGITUDE);
- setLat(latitude)
+ let healed =0;
+ let active=0;
+ setLat(latitude) 
  setLong(longitude)
  const location = await getLocationFromCoordinates(latitude, longitude);
  const locationArray = location.split(", ")
  setLocation(locationArray)
+//  setEngTemp(parseFloat(lastPostion.ENG_TEMP));
+//  setCoolantTemp(parseFloat(lastPostion.COOLANT_TEMP));
+//  setFuelTemp(parseFloat(lastPostion.FUEL_TEMP));
+//  setBatteryVoltage(parseFloat(lastPostion.BATTERY_VOLTAGE));
+ setDtcData(()=>{
+  return [
+      { code: 'P0183-00', status: lastPostion["P0183_00"], description:'Fuel Temp'},
+      { code: 'P0193-12', status: lastPostion["P0193_12"], description:'Rail Pressure'},
+      { code: 'P0251-13', status: lastPostion["P0251_13"], description:'Metering Unit'},
+      { code: 'P2264-13', status: lastPostion["P2264_13"], description:'Water in Fuel'},
+    ];
+ })
+ if(lastPostion["P0183_00"]==='0.000000')
+  active++;
+else if(lastPostion["P0183_00"]==='1.000000')
+  healed++;
+
+if(lastPostion["P0193_12"]==='0.000000')
+  active++;
+else if(lastPostion["P0193_12"]==='1.000000')
+  healed++;
+
+if(lastPostion["P0251_13"]==='0.000000')
+  active++;
+else if(lastPostion["P0251_13"]==='1.000000')
+  healed++;
+
+if(lastPostion["P2264_13"]==='0.000000')
+  active++;
+else if(lastPostion["P2264_13"]==='1.000000')
+  healed++;
+
+setActiveDTCs(active)
+setHealedDTCs(healed)
  // Loop through the coordinates and calculate distance between consecutive points
  for (let i = 0; i < newData.length - 1; i++) {
  const current = newData[i];
@@ -357,7 +498,7 @@ useEffect(() => {
 
  let allData : ChartData[] = []
 useEffect(() => {
-const socket = new WebSocket("wss://fdcserver.escortskubota.com/ws/"); // Change to your WebSocket server
+const socket = new WebSocket("ws://localhost:8080/ws/"); // Change to your WebSocket server
 socket.onopen = () => {
 console.log("Connected to WebSocket");
 };
@@ -367,18 +508,27 @@ try {
  console.log("Event data",event?.data)
  console.log(tractor_id,typeof tractor_id);
  const data = JSON.parse(event?.data);
+ console.log(data);
  console.log(data?.DEVICE_ID,typeof data?.DEVICE_ID);
  if(Data.length == 0 || Data[Data.length-1].TIME != data.TIME)
  if (data &&
    data.DEVICE_ID==`${tractor_id} `&& 
- data.DEVICE_ID && 
- data.LATITUDE!=="0.0000"&&
- data.LONGITUDE!=="0.0000" &&
- data.LATITUDE!=="0.000000"&&
- data.LONGITUDE!=="0.000000" &&
+   data.DEVICE_ID && 
+   data.LATITUDE!=="0.0000"&&
+   data.LONGITUDE!=="0.0000" &&
+   data.LATITUDE!=="0.000000"&&
+   data.LONGITUDE!=="0.000000" &&
  !isNaN(parseFloat(data.ENGINE_RPM)) &&
  !isNaN(parseFloat(data.FUEL_LEVEL)) &&
- !isNaN(parseFloat(data.SPEED))) {
+ !isNaN(parseFloat(data.SPEED))&&
+ !isNaN(parseFloat(data.BATTERY_VOLTAGE))&&
+ !isNaN(parseFloat(data.ENG_TEMP))&&
+ !isNaN(parseFloat(data.FUEL_TEMP))&&
+ !isNaN(parseFloat(data.COOLANT_TEMP))&&
+ !isNaN(parseFloat(data["P2264-13"]))&&
+ !isNaN(parseFloat(data["P0251-13"]))&&
+ !isNaN(parseFloat(data["P0193-12"]))&&
+ !isNaN(parseFloat(data["P0183-00"]))) {
  console.log("i am innnnn")
  setData((prevData) => {
  const updatedData = [
@@ -393,12 +543,32 @@ try {
  FUEL_LEVEL: parseFloat(data.FUEL_LEVEL),
  SPEED: parseFloat(data.SPEED),
  ENGINE_RPM: parseFloat(data.ENGINE_RPM) < 649 ? 0 : parseFloat(data.ENGINE_RPM),
+ BATTERY_VOLTAGE:parseFloat(data.BATTERY_VOLTAGE),
+ ENG_TEMP:parseFloat(data.ENG_TEMP),
+ FUEL_TEMP:parseFloat(data.FUEL_TEMP),
+ COOLANT_TEMP:parseFloat(data.COOLANT_TEMP),
+ P2264_13:data["P2264-13"],
+ P0251_13:data["P0251-13"],
+ P0193_12:data["P0193-12"],
+ P0183_00:data["P0183-00"],
  },
  ];
 
  allData.push(...updatedData)
  setLat(parseFloat(calculateDecimal(data.LATITUDE)))
  setLong(parseFloat(calculateDecimal(data.LONGITUDE)))
+ setEngTemp(parseFloat(data.ENG_TEMP));
+ setCoolantTemp(parseFloat(data.COOLANT_TEMP));
+ setFuelTemp(parseFloat(data.FUEL_TEMP));
+ setBatteryVoltage(parseFloat(data.BATTERY_VOLTAGE));
+ setDtcData(()=>{
+  return [
+    { code: 'P0183-00', status: data["P0183_00"], description:'Fuel Temp'},
+    { code: 'P0193-12', status: data["P0193_12"], description:'Rail Pressure'},
+    { code: 'P0251-13', status: data["P0251_13"], description:'Metering Unit'},
+    { code: 'P2264-13', status: data["P2264_13"], description:'Water in Fuel'},
+  ];
+ })
  console.log(data.SPEED)
  console.log(typeof data.SPEED)
  setSpeed(parseFloat(data.SPEED))
@@ -445,7 +615,46 @@ return () => {
 socket.close();
 };
 }, []);
+interface TelemetryCardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  unit?: string;
+}
+const TelemetryCard: React.FC<TelemetryCardProps> = ({ icon, label, value, unit }) => {
+  return (
+    <Card
+      sx={{
+        minWidth: 130,
+        flex: '1 1 130px',
+        margin: 1,
+        display: 'flex',
+        alignItems: 'center',
+        padding: 1,
+        backgroundColor: '#f5f5f5',
+        borderRadius: 2,
+        boxShadow: 3,
+      }}
+    >
+      <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+        {/* Header: Label and Icon */}
+        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="subtitle2" color="textSecondary">
+            {label}
+          </Typography>
+          <Typography sx={{ color: '#1976d2', fontSize: 7 }}>
+            {icon}
+          </Typography>
+        </Box>
 
+        {/* Value and Unit */}
+        <Typography variant="h6" sx={{ marginTop: 1 }}>
+          {value} {unit}
+        </Typography>
+      </Box>
+    </Card>
+  );
+};
 
 
 useEffect(()=>{
@@ -544,131 +753,32 @@ return (
  flex: 1, // Keep flex as is
  display: 'flex',
  flexDirection: 'column',
- margin: '16.8px' // 5% increase of 16px
+ marginRight: '16.8px' // 5% increase of 16px
 }}>
 
 
+<Box sx={{ padding: 1 }}>
 
- <div style={{ display: 'flex' }}>
- {/* Distance Travelled */}
- <div style={{
- backgroundColor: '#E3F5FF',
- borderRadius: '8px',
- boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
- maxWidth: '160px', // 5% increase of 152px
- margin: '0 auto',
- flex: '1 1 calc(33% - 16.8px)', // Adjust for 3 items in a row
- minWidth: '100px' // 5% increase of 96px
- }}>
- <p style={{ fontWeight: 'bold', borderRadius: '8px', color: 'Black', padding: '8.4px', fontSize: '13px', width: '100%' }}>Distance travelled</p> {/* 5% increase of 8px */}
- <div style={{
- display: 'flex',
- flexDirection: 'row',
- gap: '25.2px', // 5% increase of 24px
- justifyContent: 'center',
- alignItems: 'center'
- }}>
- <div style={{
- display: 'flex',
- flexDirection: 'row',
- gap: '4.2px' // 5% increase of 4px
- }}>
- <img src={dis.src} alt="Image" style={{ height: "25.2px" }} /> {/* 5% increase of 24px */}
- <p style={{ color: '#4186E5', fontSize: '18px' }}>{totalDistance.toFixed(2)} KM</p> {/* 5% increase of 16px */}
- </div>
- </div>
- </div>
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'space-around',
+          marginTop: 0,
+        }}
+      >
+        <TelemetryCard icon={<SpeedIcon />} label="Speed" value={speed} unit="km/h" />
+        <TelemetryCard icon={<StraightenIcon />} label="Distance" value={totalDistance.toFixed(2)} unit="km" />
+        <TelemetryCard icon={<AccessAlarmIcon />} label="HMR" value={HMR} />
+        <TelemetryCard icon={<LocationOnIcon />} label="Location" value={location[0]} />
+        <TelemetryCard icon={<WhatshotIcon />} label="Engine Temp" value={engTemp.toFixed(2)} unit="°C" />
+        <TelemetryCard icon={<OpacityIcon />} label="Fuel Temp" value={fuelTemp.toFixed(2)} unit="°C" />
+        <TelemetryCard icon={<DeviceThermostatIcon />} label="Coolant Temp" value={coolantTemp.toFixed(2)} unit="°C" />
+        <TelemetryCard icon={<BatteryFullIcon />} label="Battery Voltage" value={batteryVoltage.toFixed(2)} unit="V" />
+      </Box>
+    </Box>
 
- {/* Current Speed */}
- <div style={{
- backgroundColor: '#E3F5FF',
- borderRadius: '8px',
- boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
- maxWidth: '160px', // 5% increase of 152px
- margin: '0 auto',
- flex: '1 1 calc(33% - 16.8px)', // Adjust for 3 items in a row
- minWidth: '126px' // 5% increase of 120px
- }}>
- <p style={{ fontWeight: 'bold', borderRadius: '8px', color: 'Black', padding: '8.4px', fontSize: '13px', width: '100%' }}>Current speed</p> {/* 5% increase of 8px */}
- <div style={{
- display: 'flex',
- flexDirection: 'row',
- gap: '25.2px', // 5% increase of 24px
- justifyContent: 'center',
- alignItems: 'center'
- }}>
- <div style={{
- display: 'flex',
- flexDirection: 'row',
- gap: '4.2px' // 5% increase of 4px
- }}>
- <img src={speedImage.src} alt="Image" style={{ height: "23.1px", marginTop: "4px" }} /> {/* 5% increase of 22px */}
- <p style={{ color: '#4186E5', fontSize: '18px' }}>{speed.toFixed(2)} kmph</p> {/* 5% increase of 16px */}
- </div>
- </div>
- </div>
-
- {/* HMR */}
- <div style={{
- backgroundColor: '#E3F5FF',
- borderRadius: '8px',
- boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
- maxWidth: '160px', // 5% increase of 152px
- margin: '0 auto',
- flex: '1 1 calc(33% - 16.8px)', // Adjust for 3 items in a row
- minWidth: '126px' // 5% increase of 120px
- }}>
- <p style={{ fontWeight: 'bold', borderRadius: '8px', color: 'Black', padding: '8.4px', fontSize: '13px', width: '100%' }}>HMR</p> {/* 5% increase of 8px */}
- <div style={{
- display: 'flex',
- flexDirection: 'row',
- gap: '25.2px', // 5% increase of 24px
- justifyContent: 'center',
- alignItems: 'center'
- }}>
- <div style={{
- display: 'flex',
- flexDirection: 'row',
- gap: '4.2px' // 5% increase of 4px
- }}>
- <img src={speedImage.src} alt="Image" style={{ height: "23.1px", marginTop: "4px" }} /> {/* 5% increase of 22px */}
- <p style={{ color: '#4186E5', fontSize: '18px' }}>{HMR}</p> {/* 5% increase of 16px */}
- </div>
- </div>
- </div>
-
- {/* Live Location */}
- <div style={{
- backgroundColor: '#E3F5FF',
- borderRadius: '8px',
- boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
- maxWidth: '160px', // 5% increase of 152px
- margin: '0 auto',
- flex: '1 1 calc(33% - 16.8px)', // Adjust for 3 items in a row
- minWidth: '126px' // 5% increase of 120px
- }}>
- <p style={{ fontWeight: 'bold', borderRadius: '8px', color: 'Black', padding: '8.4px', fontSize: '13px', width: '100%' }}>Live location</p> {/* 5% increase of 8px */}
- <div style={{
- display: 'flex',
- flexDirection: 'row',
- gap: '25.2px', // 5% increase of 24px
- justifyContent: 'center',
- alignItems: 'center'
- }}>
- <div style={{
- display: 'flex',
- flexDirection: 'row',
- gap: '4.2px' // 5% increase of 4px
- }}>
- <img src={loc.src} alt="Image" style={{ height: "23.1px", marginTop: "4px" }} /> {/* 5% increase of 22px */}
- <p style={{ color: '#4186E5', fontSize: '18px' }}>{location.slice(0, 2).join(', ')}</p> {/* 5% increase of 16px */}
- </div>
- </div>
- </div>
- </div>
-
-
-<Map center={positions[0]} zoom={20} style={{ height: "500px", width: "100%", marginTop:"20px" }}>
+<Map center={positions[0]} zoom={20} style={{ borderRadius:'10px', marginLeft:'15px', height: "500px", width: "95%", marginTop:"20px" }}>
 <TileLayer
  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -707,9 +817,99 @@ flex: 1, // Take up 50% of the width
 display: 'flex',
 flexDirection: 'column'
 }}>
+ <Box sx={{ textAlign: 'center' }}>
+      {/* DTC cards */}
+      <Box sx={{ marginBottom: '20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around'}}>
+          <Card
+            sx={{
+              width: '130px',
+              margin: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              borderRadius: '10px',
+              backgroundColor: '#F5CD1D',
+              cursor: 'pointer', // indicate clickable
+              '&:hover': { boxShadow: 6 }, // hover effect
+            }}
+            onClick={() => handleOpen('0.000000')}
+            variant="outlined"
+          >
+            <CardContent>
+              <Typography sx={{fontWeight:'700'}} variant="subtitle2">Active DTCs</Typography>
+              <Typography variant="h4">{activeDTCs}</Typography>
+            </CardContent>
+          </Card>
+          <Card
+            sx={{
+              width: '130px',
+              margin: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              borderRadius: '10px',
+              backgroundColor: '#1DF561',
+              cursor: 'pointer', // indicate clickable
+              '&:hover': { boxShadow: 6 }, // hover effect
+            }}
+            onClick={() => handleOpen('1.000000')}
+            variant="outlined"
+          >
+            <CardContent>
+              <Typography sx={{fontWeight:'700'}} variant="subtitle2">Healed DTCs</Typography>
+              <Typography variant="h4">{healedDTCs}</Typography>
+            </CardContent>
+          </Card>
+      </Box>
 
-<div style={{ width: '100%' }}>
-<h2 style={{ fontSize: '25px', color: 'gray' }}>Fuel Level</h2>
+      {/* Modal Overlay */}
+      <Modal
+        open={open}
+        onClose={handleClose}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+        }}
+      >
+        <Fade in={open}>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: { xs: '80%', sm: 400 },
+              bgcolor: 'background.paper',
+              borderRadius: 2,
+              boxShadow: 24,
+              p: 4,
+            }}
+          >
+            { selectedDtc && dtcData&& (
+              <>
+                {dtcData.filter((e)=>e.code===selectedDtc).map((dtc)=>{ return (
+                  <><Typography variant="h6" sx={{ mb: 2 }}>
+                  DTC Code: {dtc.code}
+                </Typography>
+                <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                  Description: {dtc.description}
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 1 }}>
+                  Status: {dtc.status}
+                </Typography>
+                </>)})}
+                <Button sx={{ mt: 2 }} variant="contained" color="primary" onClick={handleClose}>
+                  Close
+                </Button>
+              </>
+            )}
+          </Box>
+        </Fade>
+      </Modal>
+    </Box>
+<div style={{paddingLeft:'30px', width: '100%' }}>
+<h2 style={{ fontSize: '20px', color: 'gray' }}>Fuel Level</h2>
 <ResponsiveContainer width="100%" height={200} >
 <LineChart data={Data} syncId="fuelChart" margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
 <CartesianGrid strokeDasharray="3 3" />
