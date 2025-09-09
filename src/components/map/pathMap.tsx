@@ -605,7 +605,7 @@ setHealedDTCs(healed)
                   </Box>
                 </>
               ))}
-                <Button sx={{ mt: 2 }} variant="contained" color="primary" onClick={handleClose}>
+                <Button sx={{ ml:'40%',mt: 2 }} variant="contained" color="primary" onClick={handleClose}>
                   Close
                 </Button>
               </>
