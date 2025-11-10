@@ -402,10 +402,10 @@ useEffect(() => {
  const location = await getLocationFromCoordinates(latitude, longitude);
  const locationArray = location.split(", ")
  setLocation(locationArray)
-//  setEngTemp(parseFloat(lastPostion.ENG_TEMP));
-//  setCoolantTemp(parseFloat(lastPostion.COOLANT_TEMP));
-//  setFuelTemp(parseFloat(lastPostion.FUEL_TEMP));
-//  setBatteryVoltage(parseFloat(lastPostion.BATTERY_VOLTAGE));
+ setEngTemp(parseFloat(lastPostion.ENG_TEMP));
+ setCoolantTemp(parseFloat(lastPostion.COOLANT_TEMP));
+ setFuelTemp(parseFloat(lastPostion.FUEL_TEMP));
+ setBatteryVoltage(parseFloat(lastPostion.BATTERY_VOLTAGE));
  setDtcData(()=>{
   return [
       { code: 'P0183-00', status: lastPostion["P0183_00"], description:'Fuel Temp'},
@@ -440,7 +440,7 @@ setHealedDTCs(healed)
  for (let i = 0; i < newData.length - 1; i++) {
  const current = newData[i];
  const next = newData[i + 1];
- 
+//  console.log(current);
  const lat1 = parseFloat(current.LATITUDE);
  const lon1 = parseFloat(current.LONGITUDE);
  const lat2 = parseFloat(next.LATITUDE);
@@ -498,7 +498,7 @@ setHealedDTCs(healed)
 
  let allData : ChartData[] = []
 useEffect(() => {
-const socket = new WebSocket("ws://localhost:8080/ws/"); // Change to your WebSocket server
+const socket = new WebSocket("wss://fdcserver.escortskubota.com/ws"); // Change to your WebSocket server
 socket.onopen = () => {
 console.log("Connected to WebSocket");
 };
@@ -888,18 +888,47 @@ flexDirection: 'column'
           >
             { selectedDtc && dtcData&& (
               <>
-                {dtcData.filter((e)=>e.code===selectedDtc).map((dtc)=>{ return (
-                  <><Typography variant="h6" sx={{ mb: 2 }}>
-                  DTC Code: {dtc.code}
-                </Typography>
-                <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                  Description: {dtc.description}
-                </Typography>
-                <Typography variant="body2" sx={{ mb: 1 }}>
-                  Status: {dtc.status}
-                </Typography>
-                </>)})}
-                <Button sx={{ mt: 2 }} variant="contained" color="primary" onClick={handleClose}>
+                {dtcData.filter((e)=>e.status==selectedDtc).map((dtc)=> (
+                  <>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 1.5,
+                      padding: 2,
+                      borderRadius: 2,
+                      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)', // Subtle shadow for card effect
+                      backgroundColor: '#fff',
+                      maxWidth: 600,
+                      margin: '20px auto',
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        mb: 0.5,
+                        fontWeight: 500,
+                        fontSize: '1rem',
+                        color: '#333',
+                      }}
+                    >
+                      DTC Code: {dtc.code}
+                    </Typography>
+                
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        mb: 0.5,
+                        fontSize: '0.875rem',
+                        color: '#555',
+                      }}
+                    >
+                      Description: {dtc.description}
+                    </Typography>
+                  </Box>
+                </>
+              ))}
+                <Button sx={{ ml:'40%',mt: 2 }} variant="contained" color="primary" onClick={handleClose}>
                   Close
                 </Button>
               </>

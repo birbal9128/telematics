@@ -538,8 +538,8 @@ console.log("320",tractors);
  </TableCell>
  <TableCell align="right">{row.tractor_name}</TableCell>
  <TableCell align="right">{row.tractor_number}</TableCell>
- {row.tractor_number=='HR 51 TC 2004/45/25'?<TableCell align="right">CRDi</TableCell>:<></>}
- {row.tractor_number=='HR 53 TC 2004/45/311'?<TableCell align="right">non-CRDi</TableCell>:<></>}
+ {row.tractor_number=='HR 53 TC 2004/45/311'?<TableCell align="right">CRDi</TableCell>:<></>}
+ {row.tractor_number=='HR 51 TC 2004/45/25'?<TableCell align="right">non-CRDi</TableCell>:<></>}
  {(!(row.tractor_number=="HR 53 TC 2004/45/311") && !(row.tractor_number=="HR 51 TC 2004/45/25"))?<TableCell align="right">non-CRDi</TableCell>:<></>}
  <TableCell align="right">{row.registered}</TableCell>
  <TableCell align="right">{row.HMR}</TableCell>

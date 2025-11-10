@@ -57,7 +57,7 @@ const Tracking: React.FC<tractor_props> = ({ tractor_id }) => {
   const [status, setStatus] = useState<string>("Stopped");
   const [lastUpdatedTimestamp, setLastUpdatedTimestamp] = useState<string>('');
   const [availableDates,setAvailableDates] = useState<string[]>([]);
-
+  
   useEffect(() => {
  const fetchDetails = async () => {
  try {
@@ -157,6 +157,26 @@ console.log(dates);
     }
   }, [date]); 
 
+  useEffect(() => {
+    const fetchLastTimeStamp2 = async () => {
+      try {
+        // Make the API request
+        const res = await axios.get(
+          `https://fdcserver.escortskubota.com/fdc/tripData/live/${tractor_id}`
+        );
+        console.log(res?.data?.at(-1).message?.TIME); // Log the response
+        console.log(res); 
+        setLastUpdatedTimestamp(res?.data?.at(-1).message?.TIME); // Set the response data to state (if needed)
+      } catch (err) {
+        console.error("Error fetching data:", err); // Handle errors
+      }
+    };
+
+    // Only run fetchData if `date` is not empty
+      fetchLastTimeStamp2();
+  }, []); 
+
+
   function addTimeToCurrentTime(currentTime: string) {
     const additionalTime = "5:30";
     const time = currentTime.match(/(\d{2}:\d{2}:\d{2})/)?.[0];
@@ -183,6 +203,7 @@ console.log(dates);
   let allData: ChartData[] = [];
 
   React.useEffect(() => {
+    console.log("COnnecting to ws")
     const socket = new WebSocket("wss://fdcserver.escortskubota.com/ws/"); // Change to your WebSocket server
     socket.onopen = () => {
       console.log("Connected to WebSocket");
@@ -191,8 +212,9 @@ console.log(dates);
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event?.data);
+        console.log(data,tractor_id);
         if (data && 
-          data.DEVICE_ID == `${tractor_id}` &&
+          data.DEVICE_ID == `${tractor_id} ` &&
           data.DEVICE_ID && 
           data.LATITUDE !== "0.000000" &&
           data.LONGITUDE !== "0.000000" &&
@@ -212,7 +234,9 @@ console.log(dates);
             ENGINE_RPM: parseFloat(data.ENGINE_RPM),
             IGNITION: parseFloat(data.IGNITION),
           };
+          console.log("239")
           allData.push(commingData);
+          console.log(allData)
           setLastUpdatedTimestamp(data.TIME);
         }
 
@@ -233,6 +257,36 @@ console.log(dates);
       socket.close();
     };
   }, []);
+  function checkStatus() {
+    console.log("ajdadjwak")
+    console.log(allData)
+    if(allData.length>0){
+    let allDataLength = allData.length;
+    console.log(allDataLength)
+    let lastPos = allData[allDataLength-1];
+    // let lastTime = timeToSeconds(lastPos?.TIME);
+    // const currentDate = new Date();
+    // const currentTime = timeToSeconds(currentDate.toTimeString().slice(0,8))
+    // console.log(currentTime);
+    console.log(lastPos) 
+    if(lastPos.SPEED>0)
+        setStatus("Running")
+    else if(lastPos.ENGINE_RPM>650 && lastPos.IGNITION===1.000000)
+        setStatus("Cranked & Halted")
+    else if(lastPos.ENGINE_RPM<=650 && lastPos.IGNITION===1.000000)
+        setStatus("Ignition On")
+    else
+    setStatus("Stopped");
+    }
+  }
+  
+  useEffect(() => {
+    console.log("12sec")
+    const intervalId = setInterval(checkStatus, 12000);
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []);
   const addTimeToString = (input: string) => {
     // Step 1: Extract the time part from the string
     const timePart = input.split(',')[1].split('+')[0]; // Extract '11:25:20'
@@ -246,30 +300,6 @@ console.log(dates);
     // Step 4: Return the updated time in 'hh:mm A' (AM/PM) format
     return updatedTime.format('hh:mm:ss A');
   };
-  function checkStatus() {
-    if (allData.length > 0) {
-      const lastPos = allData[allData.length - 1];
-      const lastTime = timeToSeconds(lastPos?.TIME);
-      const currentDate = dayjs();
-      const currentTime = timeToSeconds(currentDate.format('HH:mm:ss')); // Use Day.js
-
-      if (lastPos.SPEED > 0)
-        setStatus("Running");
-      else if (lastPos.ENGINE_RPM > 650 && lastPos.IGNITION === 1.000000)
-        setStatus("Cranked & Halted");
-      else if (lastPos.ENGINE_RPM <= 650 && lastPos.IGNITION === 1.000000)
-        setStatus("Ignition On");
-      else
-        setStatus("Stopped");
-    }
-  }
-
-  React.useEffect(() => {
-    const intervalId = setInterval(checkStatus, 12000);
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, []);
 
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-6">

@@ -81,7 +81,7 @@ export default function Dashboard() {
  const [hours, minutes, seconds] = time.split(":").map(Number);
  const [addHours, addMinutes] = additionalTime.split(":").map(Number);
  let newMinutes = minutes + addMinutes;
- let newHours = hours + addHours + Math.floor(newMinutes / 60); 
+ let newHours = hours + addHours + Math.floor(newMinutes / 60);  
  newMinutes = newMinutes % 60; 
  newHours = newHours % 24;
  let newSeconds = seconds;
