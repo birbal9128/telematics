@@ -79,34 +79,34 @@ console.log(dates);
  fetchDetails(); 
  }, []);
 
-  const renderDayWithBadge = (
-    day: Dayjs,
-    selectedDates: Dayjs[] | null,
-    props: PickersDayProps<Dayjs>
-  ) => {
-    const isSpecialDate = (availableDates || []).some((availableDates) =>
-      day.isSame(availableDates, "date")
-    );
+  // const renderDayWithBadge = (
+  //   day: Dayjs,
+  //   selectedDates: Dayjs[] | null,
+  //   props: PickersDayProps<Dayjs>
+  // ) => {
+  //   const isSpecialDate = (availableDates || []).some((availableDates) =>
+  //     day.isSame(availableDates, "date")
+  //   );
 
-    return (
-      <Badge
-        badgeContent={isSpecialDate ? "" : null}
-        color="primary"
-        overlap="circular"
-        sx={{
-          "& .MuiBadge-badge": {
-            fontSize: "0.6rem", 
-            height: "10px",
-            minWidth: "10px", 
-            padding: "0", 
-            backgroundColor: "#4FC978",
-          },
-        }}
-      >
-        <PickersDay {...props} />
-      </Badge>
-    );
-  };
+  //   return (
+  //     <Badge
+  //       badgeContent={isSpecialDate ? "" : null}
+  //       color="primary"
+  //       overlap="circular"
+  //       sx={{
+  //         "& .MuiBadge-badge": {
+  //           fontSize: "0.6rem", 
+  //           height: "10px",
+  //           minWidth: "10px", 
+  //           padding: "0", 
+  //           backgroundColor: "#4FC978",
+  //         },
+  //       }}
+  //     >
+  //       <PickersDay {...props} />
+  //     </Badge>
+  //   );
+  // };
 
 
   const getStatusStyle = (status: string) => {
@@ -346,9 +346,9 @@ console.log(dates);
                         label="Trip Date"
                         onChange={handleDateChange}
                         // value={value ? dayjs(value) : null}
-                        slots={{
-                          day: (props) => renderDayWithBadge(props.day, null, props),
-                        }}
+                        // slots={{
+                        //   day: (props) => renderDayWithBadge(props.day, null, props),
+                        // }}
                       />
                     </LocalizationProvider>
             </div>
