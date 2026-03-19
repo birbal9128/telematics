@@ -258,6 +258,7 @@ const [open, setOpen] = useState<boolean>(false);
 const [selectedDtc, setSelectedDtc] = useState<string>('');
 
 const handleOpen = (dtc: string) => {
+  console.log(dtc)
   setSelectedDtc(dtc);
   setOpen(true);
 };
@@ -293,7 +294,7 @@ endIndex: newIndex.endIndex ?? 20, // Use fallback if undefined
 
 
 function addTimeToCurrentTime(currentTime:string) {
- const additionalTime = "5:30"
+ const additionalTime = "00:00"
  const time = currentTime.match(/(\d{2}:\d{2}:\d{2})/)?.[0];
  if (!time) {
  return "Error: Invalid time format";
@@ -320,6 +321,7 @@ function calculateDecimal(number: number): string {
 }
 
 const timeToSeconds = (time: string): number => {
+  // console.log(time)
  const [hours, minutes, seconds] = time.split(':').map(Number);
  return hours * 3600 + minutes * 60 + seconds;
 };
@@ -408,10 +410,10 @@ useEffect(() => {
  setBatteryVoltage(parseFloat(lastPostion.BATTERY_VOLTAGE));
  setDtcData(()=>{
   return [
-      { code: 'P0183-00', status: lastPostion["P0183_00"], description:'Fuel Temp'},
-      { code: 'P0193-12', status: lastPostion["P0193_12"], description:'Rail Pressure'},
-      { code: 'P0251-13', status: lastPostion["P0251_13"], description:'Metering Unit'},
-      { code: 'P2264-13', status: lastPostion["P2264_13"], description:'Water in Fuel'},
+      { code: 'P0183-00', status: lastPostion?.["P0183_00"], description:'Fuel Temp'},
+      { code: 'P0193-12', status: lastPostion?.["P0193_12"], description:'Rail Pressure'},
+      { code: 'P0251-13', status: lastPostion?.["P0251_13"], description:'Metering Unit'},
+      { code: 'P2264-13', status: lastPostion?.["P2264_13"], description:'Water in Fuel'},
     ];
  })
  if(lastPostion["P0183_00"]==='0.000000')
@@ -440,7 +442,7 @@ setHealedDTCs(healed)
  for (let i = 0; i < newData.length - 1; i++) {
  const current = newData[i];
  const next = newData[i + 1];
-//  console.log(current);
+ console.log(current,next);
  const lat1 = parseFloat(current.LATITUDE);
  const lon1 = parseFloat(current.LONGITUDE);
  const lat2 = parseFloat(next.LATITUDE);
@@ -498,8 +500,10 @@ setHealedDTCs(healed)
 
  let allData : ChartData[] = []
 useEffect(() => {
-const socket = new WebSocket("wss://fdcserver.escortskubota.com/ws"); // Change to your WebSocket server
+  console.log("in")
+const socket = new WebSocket("wss://fdcserver.escortskubota.com/ws/"); // Change to your WebSocket server
 socket.onopen = () => {
+  console.log("in1")
 console.log("Connected to WebSocket");
 };
 
@@ -767,7 +771,7 @@ return (
           marginTop: 0,
         }}
       >
-        <TelemetryCard icon={<SpeedIcon />} label="Speed" value={speed} unit="km/h" />
+        <TelemetryCard icon={<SpeedIcon />} label="Speed" value={speed.toFixed(2)} unit="km/h" />
         <TelemetryCard icon={<StraightenIcon />} label="Distance" value={totalDistance.toFixed(2)} unit="km" />
         <TelemetryCard icon={<AccessAlarmIcon />} label="HMR" value={HMR} />
         <TelemetryCard icon={<LocationOnIcon />} label="Location" value={location[0]} />

@@ -58,11 +58,16 @@ export default function Dashboard() {
  const router = useRouter();
  const [status, setStatus] = React.useState<string>("Stopped");
  const [status1, setStatus1] = React.useState<string>("Stopped");
+ const [status2, setStatus2] = React.useState<string>("Stopped");
  const [tableData, setTableData] = React.useState<TableData[]>([]);
  const [totalDistance, setTotalDistance] = React.useState<number>(0)
  const [totalHMR, setTotalHMR] = React.useState<string>('00:00:00')
  const [totalDistance1, setTotalDistance1] = React.useState<number>(0)
  const [totalHMR1, setTotalHMR1] = React.useState<string>('00:00:00')
+ const [totalDistance2, setTotalDistance2] = React.useState<number>(0)
+ const [totalHMR2, setTotalHMR2] = React.useState<string>('00:00:00')
+ const [totalDistance3, setTotalDistance3] = React.useState<number>(0)
+ const [totalHMR3, setTotalHMR3] = React.useState<string>('00:00:00')
  const [allData, setAllData] = React.useState<ChartData[]>([]);
  const [liveData, setLiveData] = React.useState<ChartData[]>([]);
  const [todayDistance, setTodayDistance] = React.useState<number>(0)
@@ -73,10 +78,10 @@ export default function Dashboard() {
 // const [tractorData, setTractorData] = React.useState<>([]);
 
  const rows = [
- createData(1, 'FT 45','EKL_02', 'HR 51 TC 2004/45/25','03/04/25',`${totalHMR}`,`${totalDistance}`, `${todayDistance}`, `${status}`,"yes"),
- createData(2, 'FT 6065','EKL_03', 'HR 53 TC 2004/45/311','04/08/25',`${totalHMR1}`,`${totalDistance1}`, `${todayDistance1}`, `${status1}`,"yes"),
- createData(3, 'FT 6065','EKL_999', 'HR 51 TC 2004/45/330', '-','0','0','0' ,'Stopped','no'),
- createData(4, 'FT 6065','EKL_999', 'N/A', '-','0','0','0' ,'Stopped','no'),
+ createData(1, 'FT 45','EKL_02', 'HR 51 TC 2004/45/25','03/04/25',`${totalHMR}`,`${totalDistance}`, `0`, `${status}`,"yes"),
+ createData(2, 'FT 6065','EKL_031', 'HR 53 TC 2004/45/311','04/08/25',`${totalHMR1}`,`${totalDistance1}`, `${todayDistance1}`, `${status1}`,"yes"),
+ createData(3, 'FT 6065','EKL_03', 'Not known', '10/03/26',`${totalHMR2}`,`${totalDistance2}`, `${todayDistance}`, `${status}`,'yes'),
+ createData(4, 'FT 6065','EKL_04', 'HR 51TC 2004/45/310','17/03/26',`${totalHMR3}`,`${totalDistance3}`, `${todayDistance}`, `${status}`,'yes'),
  ];
  function addTimeToCurrentTime(currentTime:string) {
  const additionalTime = "5:30"
@@ -198,7 +203,7 @@ React.useEffect(() => {
  const fetchDetails = async () => {
  try {
  
- const res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/live`);
+ const res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/live/EKL_03`);
  console.log(res?.data)
 
  if(res.status==200){
@@ -318,7 +323,7 @@ const totalHMR = res.data.resp.reduce((sum: number, item: any) => {
 
  const fetchDetails1 = async () => {
     try {
-    const res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/getTractorHistory/EKL_03`);
+    const res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/getTractorHistory/EKL_031`);
     console.log(res)
     console.log(res.data.resp)
     const totalDistance = res.data.resp.reduce((sum: number, item: any) => {
@@ -348,7 +353,39 @@ const totalHMR = res.data.resp.reduce((sum: number, item: any) => {
     console.log(err)
     }
     }
-
+ const fetchDetails2 = async () => {
+    try {
+    const res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/getTractorHistory/EKL_03`);
+    console.log(res)
+    console.log(res.data.resp)
+    const totalDistance = res.data.resp.reduce((sum: number, item: any) => {
+    if (item.distance != null) {
+    console.log(item.distance);
+    console.log(sum);
+    return sum + parseFloat(item.distance);
+    }
+    return sum;
+   }, 0);
+   
+   const totalHMR = res.data.resp.reduce((sum: number, item: any) => {
+    if (item.hmr != null) {
+    console.log(item.hmr);
+    console.log(sum);
+    return sum + timeToSeconds(item.hmr);
+    }
+    return sum;
+   }, 0);
+   
+    console.log(totalDistance)
+    setTableData(res.data.resp)
+    setTotalDistance2(totalDistance.toFixed(2))
+    setTotalHMR2(secondsToTime(totalHMR))
+    }
+    catch(err){
+    console.log(err)
+    }
+    }
+ fetchDetails2();
  fetchDetails1();
  fetchDetails(); 
  }, []);
@@ -538,9 +575,12 @@ console.log("320",tractors);
  </TableCell>
  <TableCell align="right">{row.tractor_name}</TableCell>
  <TableCell align="right">{row.tractor_number}</TableCell>
- {row.tractor_number=='HR 53 TC 2004/45/311'?<TableCell align="right">CRDi</TableCell>:<></>}
+ {row.tractor_number=='HR 53 TC 2004/45/311' ?<TableCell align="right">CRDi</TableCell>:<></>}
  {row.tractor_number=='HR 51 TC 2004/45/25'?<TableCell align="right">non-CRDi</TableCell>:<></>}
- {(!(row.tractor_number=="HR 53 TC 2004/45/311") && !(row.tractor_number=="HR 51 TC 2004/45/25"))?<TableCell align="right">non-CRDi</TableCell>:<></>}
+ {row.tractor_number=='Not known'?<TableCell align="right">CRDi</TableCell>:<></>}
+ {row.tractor_number=="HR 51TC 2004/45/310"?<TableCell align="right">CRDi</TableCell>:<></>}
+
+
  <TableCell align="right">{row.registered}</TableCell>
  <TableCell align="right">{row.HMR}</TableCell>
 

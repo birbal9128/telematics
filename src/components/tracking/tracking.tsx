@@ -15,8 +15,8 @@ import timezone from 'dayjs/plugin/timezone';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
-import { PickersDay, PickersDayProps } from "@mui/x-date-pickers";
 import axios from "axios";
+import { PickersDay, PickersDayProps } from "@mui/x-date-pickers/PickersDay";
 
 const LiveMap = dynamic(() => import('@/components/map/LiveMap'), { ssr: false });
 const PathMap = dynamic(() => import('@/components/map/pathMap'), { ssr: false });
@@ -79,34 +79,34 @@ console.log(dates);
  fetchDetails(); 
  }, []);
 
-  // const renderDayWithBadge = (
-  //   day: Dayjs,
-  //   selectedDates: Dayjs[] | null,
-  //   props: PickersDayProps<Dayjs>
-  // ) => {
-  //   const isSpecialDate = (availableDates || []).some((availableDates) =>
-  //     day.isSame(availableDates, "date")
-  //   );
+  const renderDayWithBadge = (
+    day: Dayjs,
+    selectedDates: Dayjs[] | null,
+    props: PickersDayProps
+  ) => {
+    const isSpecialDate = (availableDates || []).some((availableDates) =>
+      day.isSame(availableDates, "date")
+    );
 
-  //   return (
-  //     <Badge
-  //       badgeContent={isSpecialDate ? "" : null}
-  //       color="primary"
-  //       overlap="circular"
-  //       sx={{
-  //         "& .MuiBadge-badge": {
-  //           fontSize: "0.6rem", 
-  //           height: "10px",
-  //           minWidth: "10px", 
-  //           padding: "0", 
-  //           backgroundColor: "#4FC978",
-  //         },
-  //       }}
-  //     >
-  //       <PickersDay {...props} />
-  //     </Badge>
-  //   );
-  // };
+    return (
+      <Badge
+        badgeContent={isSpecialDate ? "" : null}
+        color="primary"
+        overlap="circular"
+        sx={{
+          "& .MuiBadge-badge": {
+            fontSize: "0.6rem", 
+            height: "10px",
+            minWidth: "10px", 
+            padding: "0", 
+            backgroundColor: "#4FC978",
+          },
+        }}
+      >
+        <PickersDay {...props} />
+      </Badge>
+    );
+  };
 
 
   const getStatusStyle = (status: string) => {
@@ -178,7 +178,7 @@ console.log(dates);
 
 
   function addTimeToCurrentTime(currentTime: string) {
-    const additionalTime = "5:30";
+    const additionalTime = "00:00";
     const time = currentTime.match(/(\d{2}:\d{2}:\d{2})/)?.[0];
     if (!time) {
       return "Error: Invalid time format";
@@ -295,7 +295,7 @@ console.log(dates);
     const time = dayjs(`1970-01-01T${timePart}`); // Use a fixed date (e.g., 1970-01-01) because Day.js requires a valid date
   
     // Step 3: Add 5 hours and 30 minutes
-    const updatedTime = time.add(5, 'hour').add(30, 'minute');
+    const updatedTime = time.add(0, 'hour').add(0, 'minute');
     console.log(updatedTime);
     // Step 4: Return the updated time in 'hh:mm A' (AM/PM) format
     return updatedTime.format('hh:mm:ss A');
@@ -344,11 +344,16 @@ console.log(dates);
             <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <DatePicker
                         label="Trip Date"
-                        onChange={handleDateChange}
-                        // value={value ? dayjs(value) : null}
-                        // slots={{
-                        //   day: (props) => renderDayWithBadge(props.day, null, props),
-                        // }}
+                      
+                        onChange={(newValue) => {
+                                    if (dayjs.isDayjs(newValue) || newValue === null) {
+                                      handleDateChange(newValue)
+                                    }
+                                  }}
+                       
+                        slots={{
+                          day: (props) => renderDayWithBadge(props.day, null, props),
+                        }}
                       />
                     </LocalizationProvider>
             </div>

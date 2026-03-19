@@ -298,10 +298,10 @@ async function getLocationFromCoordinates(
  console.log(allData)
  setDtcData(()=>{
   return [
-      { code: 'P0183-00', status: lastPostion["P0183_00"], description:'Water in fuel'},
-      { code: 'P0193-12', status: lastPostion["P0193_12"], description:'Metering unit'},
-      { code: 'P0251-13', status: lastPostion["P0251_13"], description:'Rail pressure'},
-      { code: 'P2264-13', status: lastPostion["P2264_13"], description:'Fuel Temp'},
+      { code: 'P0183-00', status: lastPostion?.["P0183_00"], description:'Water in fuel'},
+      { code: 'P0193-12', status: lastPostion?.["P0193_12"], description:'Metering unit'},
+      { code: 'P0251-13', status: lastPostion?.["P0251_13"], description:'Rail pressure'},
+      { code: 'P2264-13', status: lastPostion?.["P2264_13"], description:'Fuel Temp'},
     ];
  })
 
