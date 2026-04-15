@@ -151,8 +151,8 @@ COOLANT_TEMP:number;
 
 const customIcon = L.icon({
 iconUrl: '/images/loaction.png', // put your image path here
-iconSize: [16, 16], // size of the icon
-iconAnchor: [8, 18], // point of the icon which will correspond to marker's location
+ iconSize: [6, 6],   // small but hoverable
+  iconAnchor: [3, 3],
 popupAnchor: [0, -16] // point from which the popup should open relative to the iconAnchor
 });
 interface DTCData {
@@ -256,6 +256,7 @@ const latRef = useRef(lat);
 const longRef = useRef(long);
 const [open, setOpen] = useState<boolean>(false);
 const [selectedDtc, setSelectedDtc] = useState<string>('');
+const [pointTime, setPointTime] = useState<string[]>([]); 
 
 const handleOpen = (dtc: string) => {
   console.log(dtc)
@@ -468,6 +469,8 @@ setHealedDTCs(healed)
  const positions:LatLngTuple[] = newData.map((point:any) => [parseFloat(point.LATITUDE), parseFloat(point.LONGITUDE)]);
  console.log(positions)
  setPositions(positions)
+ const time = newData.map((point:any) => point.TIME);
+ setPointTime(time)
  }
  }
  else{
@@ -602,6 +605,8 @@ setPositions((prevPositions) => [
  ]);
  setCenter([parseFloat(calculateDecimal(data.LATITUDE)), parseFloat(calculateDecimal(data.LONGITUDE))])
 }
+
+setPointTime((prevTimes:string[]) => [...(prevTimes || []), data.TIME]);
 } catch (error) {
 console.log("Error parsing WebSocket data:", error);
 }
@@ -791,23 +796,39 @@ return (
 
 {/* Render all markers */}
 {positions.map((pos, index) => {
- const isLast = index === positions.length - 1;
+  const isLast = index === positions.length - 1;
 
- const icon = isLast 
- ? L.icon({
- iconUrl: '/images/tractor.svg', // icon for the last point
- iconSize: [32, 32],
- iconAnchor: [16, 16],
- popupAnchor: [0, -16],
- })
- : customIcon; // default icon for other points
+  const icon = isLast 
+    ? L.icon({
+        iconUrl: '/images/tractor.svg',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+        popupAnchor: [0, -16],
+      })
+    : customIcon;
 
- return (
- <MarkerComp key={index} position={pos} icon={icon}>
- <PopupComp>Point {index + 1}: {pos[0]}, {pos[1]}</PopupComp>
- </MarkerComp>
- );
+  return (
+   <MarkerComp
+      key={index}
+      position={pos}
+      icon={icon} // keep your existing icon
+      eventHandlers={{
+        mouseover: (e) => {
+          e.target.openPopup();   // 👈 open popup on hover
+        },
+        mouseout: (e) => {
+          e.target.closePopup();  // 👈 close popup on leave
+        },
+      }}
+    >
+      <PopupComp>
+        Point {index + 1}: {pos[0]}, {pos[1]} <br />
+        Time: {pointTime[index] || "N/A"}
+      </PopupComp>
+    </MarkerComp>
+  );
 })}
+
  {/* Draw a polyline connecting the points */}
  {positions.length > 1 && (
  <PolylineComp positions={positions} color="blue" weight={3} />
