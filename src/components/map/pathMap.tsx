@@ -17,6 +17,7 @@ import OpacityIcon from '@mui/icons-material/Opacity';
 import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import "leaflet/dist/leaflet.css";
+import { CircleMarker } from "react-leaflet";
 import {
  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Brush, AreaChart, Area, ResponsiveContainer
 } from 'recharts';
@@ -76,11 +77,23 @@ interface dateProps{
  tractor_id:string
 }
 
+const hoverIcon = L.icon({
+  iconUrl: '/images/loaction.png',
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+});
+
+const tinyIcon = L.icon({
+  iconUrl: '/images/loaction.png',
+  iconSize: [6, 6],   // small but hoverable
+  iconAnchor: [3, 3],
+});
+
 const customIcon = L.icon({
- iconUrl: 'images/loaction.png', // put your image path here
- iconSize: [32, 32], // size of the icon
- iconAnchor: [16, 32], // point of the icon which will correspond to marker's location
- popupAnchor: [0, -32] // point from which the popup should open relative to the iconAnchor
+iconUrl: '/images/loaction.png', // put your image path here
+ iconSize: [6, 6],   // small but hoverable
+  iconAnchor: [3, 3],
+popupAnchor: [0, -16] // point from which the popup should open relative to the iconAnchor
 });
 interface DTCData {
   code: string;
@@ -126,10 +139,12 @@ const PopupComp = dynamic(() => import("react-leaflet").then((mod) => mod.Popup)
 const PolylineComp = dynamic(() => import("react-leaflet").then((mod) => mod.Polyline), { ssr: false });
 
 const PathMap: React.FC<dateProps> = ({ date,tractor_id }) => {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
  const [data, setData] = useState<ChartData[]>([]);
  const [centerPosition, setCenterPosition] = useState<LatLngTuple>();
  const [position, setPosition] = useState<LatLngTuple[]>([]);
  const [distance, setDistance] = useState<number>(0);
+ const [time, setTime] = useState<string[]>([]);
  const [location, setLocation] = useState<string[]>([]); 
  const [HMR, setHMR] = useState<string>("00:00:00"); 
  const [engTemp, setEngTemp] = useState<number>(0);
@@ -372,6 +387,8 @@ setHealedDTCs(healed)
  const positions:LatLngTuple[] = data.map(point => [parseFloat(point.LATITUDE), parseFloat(point.LONGITUDE)]);
  console.log(positions)
  setPosition(positions)
+ const time = data.map(point => point.TIME)
+ setTime(time)
  // if (positions?.length > 0) {
  // const latestPosition: LatLngTuple = [positions[0][0],positions[0][1]]; // Get the latest position from the array
  // setCenterPosition(latestPosition); // Only update center position if it changes
@@ -478,6 +495,54 @@ setHealedDTCs(healed)
     url="https://services.arcgisonline.com/arcgis/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
     zIndex={2}
   /> */}
+{position.map((pos, index) => {
+  return (
+    <MarkerComp
+      key={index}
+      position={pos}
+      icon={customIcon} // keep your existing icon
+      eventHandlers={{
+        mouseover: (e) => {
+          e.target.openPopup();   // 👈 open popup on hover
+        },
+        mouseout: (e) => {
+          e.target.closePopup();  // 👈 close popup on leave
+        },
+      }}
+    >
+      <PopupComp>
+        Point {index + 1}: {pos[0]}, {pos[1]} <br />
+        Time: {time[index] || "N/A"}
+      </PopupComp>
+    </MarkerComp>
+  );
+})}
+
+{/* {position.map((pos, index) => (
+  <CircleMarker
+    key={index}
+    center={pos}
+    radius={8} // 👈 hover area (important)
+    pathOptions={{
+      color: 'transparent',
+      fillColor: 'transparent',
+      fillOpacity: 0,
+    }}
+    eventHandlers={{
+      mouseover: (e) => {
+        e.target.openPopup();
+      },
+      mouseout: (e) => {
+        e.target.closePopup();
+      },
+    }}
+  >
+    <PopupComp>
+      Point {index + 1}: {pos[0]}, {pos[1]} <br />
+      Time: {time[index] || "N/A"}
+    </PopupComp>
+  </CircleMarker>
+))} */}
 
  {position?.length > 1 && (
  <PolylineComp positions={position} color="blue" weight={3} />
