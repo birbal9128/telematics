@@ -23,7 +23,8 @@ const PathMap = dynamic(() => import('@/components/map/pathMap'), { ssr: false }
 // const Flatpickr = dynamic(() => import('react-flatpickr'), { ssr: false });
 
 interface tractor_props{
-    tractor_id: string
+    tractor_id: string,
+    tractor_number: string
 }
 
 interface Data {
@@ -50,7 +51,7 @@ interface ChartData {
   IGNITION: number;
 }
 
-const Tracking: React.FC<tractor_props> = ({ tractor_id }) => {
+const Tracking: React.FC<tractor_props> = ({ tractor_id, tractor_number}) => {
   // const [newData, setNewData] = useState<Data>(Object);
   const [date, setDate] = useState<string>('');
   const [today, setToday] = useState(dayjs().format('YYYY-MM-DD')); // Use Day.js
@@ -313,7 +314,7 @@ console.log(dates);
                   Tractor Number
                 </Typography>
                 <Typography variant="h6" fontWeight="bold" color="text.primary" sx={{ fontSize: "1.2rem" }}>
-                  HR 51 TC 2004/45/25
+                  {decodeURIComponent(tractor_number)}
                 </Typography>
               </Box>
             </CardContent>
