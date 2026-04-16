@@ -80,7 +80,7 @@ export default function Dashboard() {
 // const [tractorData, setTractorData] = React.useState<>([]);
 
  const rows = [
- createData(1, 'FT 45','EKL_02', 'HR 51 TC 2004/45/25','03/04/25',`${totalHMR}`,`${totalDistance}`, `0`, `${status}`,"yes"),
+ createData(1, 'FT 45','EKL_06', 'HR 51 TC 2004/45/25','03/04/25',`${totalHMR}`,`${totalDistance}`, `0`, `${status}`,"yes"),
  createData(2, 'FT 6065','EKL_031', 'HR 53 TC 2004/45/311','04/08/25',`${totalHMR1}`,`${totalDistance1}`, `${todayDistance1}`, `${status1}`,"yes"),
  createData(3, 'FT 6065','EKL_03', 'Not known', '10/03/26',`${totalHMR2}`,`${totalDistance2}`, `${todayDistance}`, `${status}`,'yes'),
  createData(4, 'FT 6065','EKL_04', 'HR 51TC 2004/45/310','17/03/26',`${totalHMR3}`,`${totalDistance3}`, `${todayDistance}`, `${status}`,'yes'),
@@ -293,7 +293,7 @@ React.useEffect(() => {
  React.useEffect(() => {
  const fetchDetails = async () => {
  try {
- const res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/getTractorHistory/EKL_02`);
+ const res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/getTractorHistory/EKL_06`);
  console.log(res)
  console.log(res.data.resp)
  const totalDistance = res.data.resp.reduce((sum: number, item: any) => {
@@ -645,7 +645,7 @@ console.log("320",tractors);
  <TableCell align="right">{row.tractor_name}</TableCell>
  <TableCell align="right">{row.tractor_number}</TableCell>
  {row.tractor_number=='HR 53 TC 2004/45/311' ?<TableCell align="right">CRDi</TableCell>:<></>}
- {row.tractor_number=='HR 51 TC 2004/45/25'?<TableCell align="right">non-CRDi</TableCell>:<></>}
+ {row.tractor_number=='HR 51 TC 2004/45/25'?<TableCell align="right">CRDi</TableCell>:<></>}
  {row.tractor_number=='Not known'?<TableCell align="right">CRDi</TableCell>:<></>}
  {row.tractor_number=="HR 51TC 2004/45/310"?<TableCell align="right">CRDi</TableCell>:<></>}
  {row.tractor_number=="HR-53-TC 2004/45/330"?<TableCell align="right">CRDi</TableCell>:<></>}
@@ -672,7 +672,7 @@ console.log("320",tractors);
  <TableCell align="right">
  {row.view==="yes"?<Button
  onClick={() => {
- router.push(`/tracking/${row.device_id}`); 
+ router.push(`/tracking/${row.device_id}/${encodeURIComponent(row.tractor_number)}`); 
  }}
  variant="contained"
  color="primary"

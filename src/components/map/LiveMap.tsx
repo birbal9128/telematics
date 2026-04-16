@@ -269,7 +269,7 @@ const handleClose = () => {
   setSelectedDtc('');
 };
 
- const start = tractor_id==='EKL_02'?dayjs('2025-04-04'):dayjs('2025-08-04');
+ const start = tractor_id==='EKL_06'?dayjs('2025-04-04'):dayjs('2025-08-04');
  const yesterday = dayjs().subtract(1, 'day');
 
  // Generate array of all dates from start to yesterday inclusive

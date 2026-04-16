@@ -279,7 +279,7 @@ React.useEffect(() => {
  React.useEffect(() => {
  const fetchDetails = async () => {
  try {
- const res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/getTractorHistory/EKL_02`);
+ const res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/getTractorHistory/EKL_06`);
  console.log(res)
  console.log(res.data.resp)
  const totalDistance = res.data.resp.reduce((sum: number, item: any) => {
