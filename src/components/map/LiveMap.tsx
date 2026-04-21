@@ -365,7 +365,7 @@ useEffect(() => {
  const updatedEngineRpm = item.message.ENGINE_RPM < 649 ? 0 : item.message.ENGINE_RPM;
  
  return {
- TIME: addTimeToCurrentTime(item.message.TIME),
+ TIME: item.message.TIME,
  DEVICE_ID: item.message.DEVICE_ID,
  LATITUDE: calculateDecimal(item.message.LATITUDE),
  LONGITUDE: calculateDecimal(item.message.LONGITUDE),
@@ -541,7 +541,7 @@ try {
  const updatedData = [
  ...prevData,
  {
- TIME: addTimeToCurrentTime(data.TIME),
+ TIME: data.TIME,
  name: new Date().toLocaleTimeString(),
  DEVICE_ID: data.DEVICE_ID,
  LATITUDE: calculateDecimal(data.LATITUDE),
