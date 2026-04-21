@@ -271,7 +271,7 @@ async function getLocationFromCoordinates(
  const updatedEngineRpm = item.ENGINE_RPM < 649 ? 0 : item.ENGINE_RPM;
  
  return {
- "TIME": addTimeToCurrentTime(item.TIME),
+ "TIME": item.TIME,
  "DEVICE_ID": item.DEVICE_ID,
  "LATITUDE": calculateDecimal(item.LATITUDE),
  "LONGITUDE": calculateDecimal(item.LONGITUDE),
