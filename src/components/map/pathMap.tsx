@@ -147,12 +147,14 @@ const PathMap: React.FC<dateProps> = ({ date,tractor_id }) => {
  const [time, setTime] = useState<string[]>([]);
  const [location, setLocation] = useState<string[]>([]); 
  const [HMR, setHMR] = useState<string>("00:00:00"); 
+ const [newHMR, setNewHMR] = useState<string>("00:00:00"); 
  const [engTemp, setEngTemp] = useState<number>(0);
 const [fuelTemp, setFuelTemp] = useState<number>(0);
 const [coolantTemp, setCoolantTemp] = useState<number>(0);
 const [batteryVoltage, setBatteryVoltage] = useState<number>(0);
 const [activeDTCs, setActiveDTCs] = useState<number>(0);
 const [healedDTCs, setHealedDTCs] = useState<number>(0);
+ const [HMRData, setHMRData] = useState<ChartData[]>([]);
 const [dtcData,setDtcData] = useState<DTCData[]>([
   { code: 'P0183-00', status: "-1", description:'Water in fuel'},
   { code: 'P0193-12', status: "-1", description:'Metering unit'},
@@ -190,8 +192,10 @@ const haversineDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 };
 
 const timeToSeconds = (time: string): number => {
- const [hours, minutes, seconds] = time.split(':').map(Number);
- return hours * 3600 + minutes * 60 + seconds;
+  const timePart = time.split(",")[1];
+  const cleanTime = timePart.split("+")[0];
+  const [hours, minutes, seconds] = cleanTime.split(':').map(Number);
+  return hours * 3600 + minutes * 60 + seconds;
 };
 
 const secondsToTime = (seconds: number): string => {
@@ -268,7 +272,7 @@ async function getLocationFromCoordinates(
  const newData = res.data.result?.data
  .filter((item: any) => item.LATITUDE !== '0.000000' && item.LONGITUDE !== '0.000000'&& item.LATITUDE !== '0.0000' && item.LONGITUDE !== '0.0000' && item.LATITUDE !== 0 && item.LONGITUDE !== 0 ) 
  .map((item: any) => {
- const updatedEngineRpm = item.ENGINE_RPM < 649 ? 0 : item.ENGINE_RPM;
+ const updatedEngineRpm = item.ENGINE_RPM < 650 ? 0 : item.ENGINE_RPM; //change 650 to 100
  
  return {
  "TIME": item.TIME,
@@ -294,6 +298,58 @@ async function getLocationFromCoordinates(
  t.TIME === value.TIME
  ));
  });
+
+
+ //start HMR calculation
+const dataHMR = res.data.result?.data.map((item: any) => {
+ const updatedEngineRpm = item.ENGINE_RPM < 0 ? 0 : item.ENGINE_RPM; //change 650 to 100
+ 
+ return {
+ "TIME": item.TIME,
+ "DEVICE_ID": item.DEVICE_ID,
+ "LATITUDE": calculateDecimal(item.LATITUDE),
+ "LONGITUDE": calculateDecimal(item.LONGITUDE),
+ "ALTITUDE": item.ALTITUDE,
+ "SPEED": item.SPEED,
+ "FUEL_LEVEL": item.FUEL_LEVEL,
+ "ENGINE_RPM": updatedEngineRpm,
+ "BATTERY_VOLTAGE":item.BATTERY_VOLTAGE,
+ "ENG_TEMP":item.ENG_TEMP,
+ "COOLANT_TEMP":item.COOLANT_TEMP,
+ "FUEL_TEMP":item.FUEL_TEMP,
+ "P2264_13":item["P2264-13"],
+ "P0193_12":item["P0193-12"],
+ "P0251_13":item["P0251-13"],
+ "P0183_00":item["P0183-00"]
+ };
+ })
+ .filter((value:any, index:any, self:any) => {
+ return index === self.findIndex((t:any) => (
+ t.TIME === value.TIME
+ ));
+ });
+ console.log("data for hmr",dataHMR)
+let newHMR = 0
+let counter = 0
+for (let i = 0; i < dataHMR.length - 1; i++) {
+ const current = dataHMR[i];
+ const next = dataHMR[i + 1];
+ if(next.TIME != "Error: Invalid time format" && current.TIME != "Error: Invalid time format"){
+   if(next.ENGINE_RPM > 0 && current.ENGINE_RPM > 0){
+    console.log("current time",current.TIME,"next time",next.TIME)
+    const dif = timeToSeconds(next.TIME) - timeToSeconds(current.TIME)
+    console.log("time difference",dif)
+     if(dif<=600 && dif>0){
+       newHMR += dif
+      }
+  }
+ }
+
+ }
+
+ console.log("new hmr",secondsToTime(newHMR))
+setNewHMR(secondsToTime(newHMR))
+
 
  setData(newData)
  console.log(newData)
@@ -472,7 +528,7 @@ setHealedDTCs(healed)
         }}
       >
         <TelemetryCard icon={<StraightenIcon />} label="Distance" value={distance.toFixed(2)} unit="km" />
-        <TelemetryCard icon={<AccessAlarmIcon />} label="HMR" value={HMR} />
+        <TelemetryCard icon={<AccessAlarmIcon />} label="HMR" value={newHMR} />
         {batteryVoltage?<TelemetryCard icon={<BatteryFullIcon />} label="Battery Voltage" value={batteryVoltage.toFixed(2)} unit="V" />:<></>}
         {engTemp?<TelemetryCard icon={<WhatshotIcon />} label="Engine Temp" value={engTemp.toFixed(2)} unit="°C" />:<></>}
         {fuelTemp?<TelemetryCard icon={<OpacityIcon />} label="Fuel Temp" value={fuelTemp.toFixed(2)} unit="°C" />:<></>}
