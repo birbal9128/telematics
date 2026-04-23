@@ -242,6 +242,7 @@ const [coolantTemp, setCoolantTemp] = useState<number>(0);
 const [batteryVoltage, setBatteryVoltage] = useState<number>(0);
 const [activeDTCs, setActiveDTCs] = useState<number>(0);
 const [healedDTCs, setHealedDTCs] = useState<number>(0);
+ const [newHMR, setNewHMR] = useState<string>("00:00:00"); 
 const [dtcData,setDtcData] = useState<DTCData[]>([
   { code: 'P0183-00', status: "-1", description:'Water in Fuel'},
   { code: 'P0193-12', status: "-1", description:'Metering Unit'},
@@ -322,9 +323,10 @@ function calculateDecimal(number: number): string {
 }
 
 const timeToSeconds = (time: string): number => {
-  // console.log(time)
- const [hours, minutes, seconds] = time.split(':').map(Number);
- return hours * 3600 + minutes * 60 + seconds;
+  const timePart = time.split(",")[1];
+  const cleanTime = timePart.split("+")[0];
+  const [hours, minutes, seconds] = cleanTime.split(':').map(Number);
+  return hours * 3600 + minutes * 60 + seconds;
 };
 
 const secondsToTime = (seconds: number): string => {
@@ -386,6 +388,52 @@ useEffect(() => {
  .filter((value: any, index: any, self: any) => {
  return index === self.findIndex((t: any) => t.TIME === value.TIME);
  });
+
+const dataHMR = res.data.map((item: any) => {
+ const updatedEngineRpm = item.message.ENGINE_RPM < 100 ? 0 : item.message.ENGINE_RPM;
+ 
+ return {
+ TIME: item.message.TIME,
+ DEVICE_ID: item.message.DEVICE_ID,
+ LATITUDE: calculateDecimal(item.message.LATITUDE),
+ LONGITUDE: calculateDecimal(item.message.LONGITUDE),
+ ALTITUDE: item.message.ALTITUDE,
+ SPEED: item.message.SPEED,
+ FUEL_LEVEL: item.message.FUEL_LEVEL,
+ ENGINE_RPM: updatedEngineRpm,
+ BATTERY_VOLTAGE:item.message.BATTERY_VOLTAGE,
+ ENG_TEMP:item.message.ENG_TEMP,
+ COOLANT_TEMP:item.message.COOLANT_TEMP,
+ FUEL_TEMP:item.message.FUEL_TEMP,
+ P2264_13:item.message["P2264-13"],
+ P0251_13:item.message["P0251-13"],
+ P0193_12:item.message["P0193-12"],
+ P0183_00:item.message["P0183-00"],
+ };
+ })
+ .filter((value: any, index: any, self: any) => {
+ return index === self.findIndex((t: any) => t.TIME === value.TIME);
+ });
+
+ let newHMR = 0
+let counter = 0
+for (let i = 0; i < dataHMR.length - 1; i++) {
+ const current = dataHMR[i];
+ const next = dataHMR[i + 1];
+ if(next.TIME != "Error: Invalid time format" && current.TIME != "Error: Invalid time format"){
+   if(next.ENGINE_RPM > 0 && current.ENGINE_RPM > 0){
+    console.log("current time",current.TIME,"next time",next.TIME)
+    const dif = timeToSeconds(next.TIME) - timeToSeconds(current.TIME)
+    console.log("time difference",dif)
+     if(dif<=600 && dif>0){
+       newHMR += dif
+      }
+  }
+ }
+
+ }
+
+  console.log("new hmr",secondsToTime(newHMR))
  
 
  console.log(newData)
@@ -443,7 +491,6 @@ setHealedDTCs(healed)
  for (let i = 0; i < newData.length - 1; i++) {
  const current = newData[i];
  const next = newData[i + 1];
- console.log(current,next);
  const lat1 = parseFloat(current.LATITUDE);
  const lon1 = parseFloat(current.LONGITUDE);
  const lat2 = parseFloat(next.LATITUDE);
@@ -688,7 +735,7 @@ useEffect(()=>{
  }
  distance += haversine(lat1, lon1, lat2, lon2);
  setTotalDistance(distance)
- setHMR(secondsToTime(newHMR))
+ setNewHMR(secondsToTime(newHMR))
  }
  }
  
@@ -778,7 +825,7 @@ return (
       >
         <TelemetryCard icon={<SpeedIcon />} label="Speed" value={speed.toFixed(2)} unit="km/h" />
         <TelemetryCard icon={<StraightenIcon />} label="Distance" value={totalDistance.toFixed(2)} unit="km" />
-        <TelemetryCard icon={<AccessAlarmIcon />} label="HMR" value={HMR} />
+        <TelemetryCard icon={<AccessAlarmIcon />} label="HMR" value={newHMR} />
         <TelemetryCard icon={<LocationOnIcon />} label="Location" value={location[0]} />
         <TelemetryCard icon={<WhatshotIcon />} label="Engine Temp" value={engTemp.toFixed(2)} unit="°C" />
         <TelemetryCard icon={<OpacityIcon />} label="Fuel Temp" value={fuelTemp.toFixed(2)} unit="°C" />
