@@ -26,6 +26,7 @@ import OpacityIcon from '@mui/icons-material/Opacity';
 import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import dayjs from 'dayjs';
+import { set } from "react-hook-form";
 
 interface WebSocketData {
 DEVICE_ID: string;
@@ -416,7 +417,6 @@ const dataHMR = res.data.map((item: any) => {
  });
 
  let newHMR = 0
-let counter = 0
 for (let i = 0; i < dataHMR.length - 1; i++) {
  const current = dataHMR[i];
  const next = dataHMR[i + 1];
@@ -434,6 +434,7 @@ for (let i = 0; i < dataHMR.length - 1; i++) {
  }
 
   console.log("new hmr",secondsToTime(newHMR))
+  setNewHMR(secondsToTime(newHMR))
  
 
  console.log(newData)
@@ -735,7 +736,7 @@ useEffect(()=>{
  }
  distance += haversine(lat1, lon1, lat2, lon2);
  setTotalDistance(distance)
- setNewHMR(secondsToTime(newHMR))
+ setHMR(secondsToTime(newHMR))
  }
  }
  
@@ -825,7 +826,7 @@ return (
       >
         <TelemetryCard icon={<SpeedIcon />} label="Speed" value={speed.toFixed(2)} unit="km/h" />
         <TelemetryCard icon={<StraightenIcon />} label="Distance" value={totalDistance.toFixed(2)} unit="km" />
-        <TelemetryCard icon={<AccessAlarmIcon />} label="HMR" value={newHMR} />
+        <TelemetryCard icon={<AccessAlarmIcon />} label="HMR" value={HMR} />
         <TelemetryCard icon={<LocationOnIcon />} label="Location" value={location[0]} />
         <TelemetryCard icon={<WhatshotIcon />} label="Engine Temp" value={engTemp.toFixed(2)} unit="°C" />
         <TelemetryCard icon={<OpacityIcon />} label="Fuel Temp" value={fuelTemp.toFixed(2)} unit="°C" />
