@@ -26,6 +26,7 @@ import OpacityIcon from '@mui/icons-material/Opacity';
 import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import dayjs from 'dayjs';
+import { set } from "react-hook-form";
 
 interface WebSocketData {
 DEVICE_ID: string;
@@ -416,7 +417,6 @@ const dataHMR = res.data.map((item: any) => {
  });
 
  let newHMR = 0
-let counter = 0
 for (let i = 0; i < dataHMR.length - 1; i++) {
  const current = dataHMR[i];
  const next = dataHMR[i + 1];
@@ -434,6 +434,7 @@ for (let i = 0; i < dataHMR.length - 1; i++) {
  }
 
   console.log("new hmr",secondsToTime(newHMR))
+  setNewHMR(secondsToTime(newHMR))
  
 
  console.log(newData)
@@ -735,7 +736,7 @@ useEffect(()=>{
  }
  distance += haversine(lat1, lon1, lat2, lon2);
  setTotalDistance(distance)
- setNewHMR(secondsToTime(newHMR))
+ setHMR(secondsToTime(newHMR))
  }
  }
  
