@@ -826,7 +826,7 @@ return (
       >
         <TelemetryCard icon={<SpeedIcon />} label="Speed" value={speed.toFixed(2)} unit="km/h" />
         <TelemetryCard icon={<StraightenIcon />} label="Distance" value={totalDistance.toFixed(2)} unit="km" />
-        <TelemetryCard icon={<AccessAlarmIcon />} label="HMR" value={HMR} />
+        <TelemetryCard icon={<AccessAlarmIcon />} label="HMR" value={newHMR} />
         <TelemetryCard icon={<LocationOnIcon />} label="Location" value={location[0]} />
         <TelemetryCard icon={<WhatshotIcon />} label="Engine Temp" value={engTemp.toFixed(2)} unit="°C" />
         <TelemetryCard icon={<OpacityIcon />} label="Fuel Temp" value={fuelTemp.toFixed(2)} unit="°C" />
