@@ -27,6 +27,7 @@ import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import dayjs from 'dayjs';
 import { set } from "react-hook-form";
+import { count } from "console";
 
 interface WebSocketData {
 DEVICE_ID: string;
@@ -261,7 +262,7 @@ const [selectedDtc, setSelectedDtc] = useState<string>('');
 const [pointTime, setPointTime] = useState<string[]>([]); 
 
 const handleOpen = (dtc: string) => {
-  console.log(dtc)
+  // console.log(dtc)
   setSelectedDtc(dtc);
   setOpen(true);
 };
@@ -338,6 +339,13 @@ const secondsToTime = (seconds: number): string => {
  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 };
 
+ function isValidDateFormat(dateStr:string) {
+  // matches 26/04/28,12:51:18+22
+  const cleaned = dateStr.trim();
+  const regex = /^\d{2}\/\d{2}\/\d{2},\d{2}:\d{2}:\d{2}\+\d{2}$/;
+  return regex.test(cleaned);
+}
+
 
 useEffect(() => {
  setData([])
@@ -346,11 +354,11 @@ useEffect(() => {
  try {
 
  const res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/live/${tractor_id}`);
- console.log(res?.data)
+//  console.log(res?.data)
 
  if(res.status==200){
  let lastTimestamp: string | null = null; 
- console.log(lastTimestamp)
+//  console.log(lastTimestamp)
 
  const newData = res.data
  .filter((item: any) => {
@@ -417,14 +425,19 @@ const dataHMR = res.data.map((item: any) => {
  });
 
  let newHMR = 0
+
+let counter = 0
 for (let i = 0; i < dataHMR.length - 1; i++) {
  const current = dataHMR[i];
  const next = dataHMR[i + 1];
- if(next.TIME != "Error: Invalid time format" && current.TIME != "Error: Invalid time format"){
+//  console.log("current time",current.TIME,"next time",next.TIME)
+ if(next.TIME != "Error: Invalid time format" && current.TIME != "Error: Invalid time format" && isValidDateFormat(current.TIME) &&
+ isValidDateFormat(next.TIME)){
+    // console.log(counter++)
    if(next.ENGINE_RPM > 0 && current.ENGINE_RPM > 0){
-    console.log("current time",current.TIME,"next time",next.TIME)
+    // console.log("current time",current.TIME,"next time",next.TIME)
     const dif = timeToSeconds(next.TIME) - timeToSeconds(current.TIME)
-    console.log("time difference",dif)
+    // console.log("time difference",dif)
      if(dif<=600 && dif>0){
        newHMR += dif
       }
@@ -433,17 +446,17 @@ for (let i = 0; i < dataHMR.length - 1; i++) {
 
  }
 
-  console.log("new hmr",secondsToTime(newHMR))
+  // console.log("new hmr",secondsToTime(newHMR))
   setNewHMR(secondsToTime(newHMR))
  
 
- console.log(newData)
+//  console.log(newData)
  setData(newData)
  let totalDistance = 0
  let allDataLenght = newData.length
  // console.log(allDataLenght)
  let lastPostion = newData[allDataLenght-1]
- console.log(lastPostion)
+//  console.log(lastPostion)
  setTime(lastPostion.TIME)
  const latitude = parseFloat(lastPostion?.LATITUDE); 
  const longitude = parseFloat(lastPostion?.LONGITUDE);
@@ -496,7 +509,7 @@ setHealedDTCs(healed)
  const lon1 = parseFloat(current.LONGITUDE);
  const lat2 = parseFloat(next.LATITUDE);
  const lon2 = parseFloat(next.LONGITUDE);
- if(next.TIME != "Error: Invalid time format" && current.TIME != "Error: Invalid time format"){
+ if(next.TIME != "Error: Invalid time format" && current.TIME != "Error: Invalid time format" && isValidDateFormat(current.TIME) && isValidDateFormat(next.TIME)){
  const dif = timeToSeconds(next.TIME) - timeToSeconds(current.TIME)
  if(lat1 != lat2 || lon1 != lon2){
  if(dif<=1200 && dif > 0 ){
@@ -508,14 +521,14 @@ setHealedDTCs(healed)
 
  
  }
- console.log(secondsToTime(HMR))
+//  console.log(secondsToTime(HMR))
  setHMR(secondsToTime(HMR))
  setTotalDistance(totalDistance)
 
  if (newData?.length > 0) {
- console.log(newData)
+//  console.log(newData)
  const positions:LatLngTuple[] = newData.map((point:any) => [parseFloat(point.LATITUDE), parseFloat(point.LONGITUDE)]);
- console.log(positions)
+//  console.log(positions)
  setPositions(positions)
  const time = newData.map((point:any) => point.TIME);
  setPointTime(time)
@@ -537,7 +550,7 @@ setHealedDTCs(healed)
  const fetchDetails = async () => {
  try {
  const res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/getTractorHistory/${tractor_id}`);
- console.log(res.data.resp)
+//  console.log(res.data.resp)
  setTableData(res.data.resp)
  }
  catch(err){
@@ -551,20 +564,21 @@ setHealedDTCs(healed)
 
  let allData : ChartData[] = []
 useEffect(() => {
-  console.log("in")
+  // console.log("in")
 const socket = new WebSocket("wss://fdcserver.escortskubota.com/ws/"); // Change to your WebSocket server
 socket.onopen = () => {
-  console.log("in1")
+  // console.log("in1")
 console.log("Connected to WebSocket");
 };
 
 socket.onmessage = (event) => {
 try {
- console.log("Event data",event?.data)
- console.log(tractor_id,typeof tractor_id);
+//  console.log("Event data",event?.data)
+//  console.log(tractor_id,typeof tractor_id);
  const data = JSON.parse(event?.data);
- console.log(data);
- console.log(data?.DEVICE_ID,typeof data?.DEVICE_ID);
+//  console.log(data);
+//  console.log(data?.DEVICE_ID,typeof data?.DEVICE_ID);
+//  console.log(tractor_id==data?.DEVICE_ID,tractor_id,data?.DEVICE_ID)
  if(Data.length == 0 || Data[Data.length-1].TIME != data.TIME)
  if (data &&
    data.DEVICE_ID==`${tractor_id} `&& 
@@ -584,7 +598,7 @@ try {
  !isNaN(parseFloat(data["P0251-13"]))&&
  !isNaN(parseFloat(data["P0193-12"]))&&
  !isNaN(parseFloat(data["P0183-00"]))) {
- console.log("i am innnnn")
+//  console.log("i am innnnn")
  setData((prevData) => {
  const updatedData = [
  ...prevData,
@@ -624,22 +638,22 @@ try {
     { code: 'P2264-13', status: data["P2264_13"], description:'Water in Fuel'},
   ];
  })
- console.log(data.SPEED)
- console.log(typeof data.SPEED)
+//  console.log(data.SPEED)
+//  console.log(typeof data.SPEED)
  setSpeed(parseFloat(data.SPEED))
  return updatedData;
  }); 
  }
-console.log(data);
+// console.log(data);
 
 
-if (data.LATITUDE && data.LONGITUDE && data.LATITUDE!=="0.000000"&& data.LONGITUDE!=="0.000000" && data.LATITUDE!=="0.0000" && data.LONGITUDE!=="0.0000") {
-console.log("New Position:", data.LATITUDE, data.LONGITUDE);
+if (data.LATITUDE && data.LONGITUDE && data.LATITUDE!=="0.000000"&& data.LONGITUDE!=="0.000000" && data.LATITUDE!=="0.0000" && data.LONGITUDE!=="0.0000" && data.DEVICE_ID==`${tractor_id} `) {
+// console.log("New Position:", data.LATITUDE, data.LONGITUDE);
 
 setDisPositions((prevPositions) => {
  if (prevPositions.length > 0) {
  const lastPos = prevPositions[prevPositions.length - 1];
- const distance = haversine(lastPos[0], lastPos[1], parseInt(calculateDecimal(data.LATITUDE)), parseInt(calculateDecimal(data.LONGITUDE)));
+ const distance:any = haversine(lastPos[0], lastPos[1], parseInt(calculateDecimal(data.LATITUDE)), parseInt(calculateDecimal(data.LONGITUDE)));
  setTotalDistance((prevDistance) => prevDistance + distance);
  }
 
@@ -727,7 +741,7 @@ useEffect(()=>{
  const lon1 = parseFloat(last?.LONGITUDE);
  const lat2 = parseFloat(secondLast?.LATITUDE);
  const lon2 = parseFloat(secondLast?.LONGITUDE);
- if(last?.TIME != "Error: Invalid time format" && secondLast?.TIME != "Error: Invalid time format"){
+ if(last?.TIME != "Error: Invalid time format" && secondLast?.TIME != "Error: Invalid time format" && isValidDateFormat(last?.TIME) && isValidDateFormat(secondLast?.TIME)){
  const dif = timeToSeconds(last?.TIME) - timeToSeconds(secondLast?.TIME)
  if(lat1 != lat2 || lon1 != lon2){
  if(dif<=1200 && dif > 0 ){
@@ -766,7 +780,7 @@ if (typeof window === 'undefined') {
 }
 
 const fetchLocation = async () => {
- console.log("hi",lat,long)
+//  console.log("hi",lat,long)
  if (lat !== 0 && long !== 0) {
  const location = await getLocationFromCoordinates(lat, long);
  const locationArray = location.split(","); 
