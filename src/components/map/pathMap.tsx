@@ -101,7 +101,12 @@ interface DTCData {
   description:string;
 }
 
-
+ function isValidDateFormat(dateStr:string) {
+  // matches 26/04/28,12:51:18+22
+  const cleaned = dateStr.trim();
+  const regex = /^\d{2}\/\d{2}\/\d{2},\d{2}:\d{2}:\d{2}\+\d{2}$/;
+  return regex.test(cleaned);
+}
 
 // Function to get the color for each status
 const getStatusColor = (status: '1.000000' | '2.000000' | '0.000000'| '-1'): string => {
@@ -334,7 +339,7 @@ let counter = 0
 for (let i = 0; i < dataHMR.length - 1; i++) {
  const current = dataHMR[i];
  const next = dataHMR[i + 1];
- if(next.TIME != "Error: Invalid time format" && current.TIME != "Error: Invalid time format"){
+ if(next.TIME != "Error: Invalid time format" && current.TIME != "Error: Invalid time format" && isValidDateFormat(next.TIME) && isValidDateFormat(current.TIME)){
    if(next.ENGINE_RPM > 0 && current.ENGINE_RPM > 0){
     console.log("current time",current.TIME,"next time",next.TIME)
     const dif = timeToSeconds(next.TIME) - timeToSeconds(current.TIME)
@@ -410,7 +415,7 @@ setHealedDTCs(healed)
  const lon1 = parseFloat(current.LONGITUDE);
  const lat2 = parseFloat(next.LATITUDE);
  const lon2 = parseFloat(next.LONGITUDE);
- if(next.TIME != "Error: Invalid time format" && current.TIME != "Error: Invalid time format"){
+ if(next.TIME != "Error: Invalid time format" && current.TIME != "Error: Invalid time format" && isValidDateFormat(next.TIME) && isValidDateFormat(current.TIME)){
  const dif = timeToSeconds(next.TIME) - timeToSeconds(current.TIME)
  if(lat1 != lat2 || lon1 != lon2){
  if(dif<=1200 && dif>0){
