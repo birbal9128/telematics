@@ -114,41 +114,6 @@ COOLANT_TEMP:number;
  message: AssetTrackerMessage;
  }
 
- const demo = [
- {
- name: 'Page A',
- uv: 590,
- amt: 1400,
- },
- {
- name: 'Page B',
- uv: 868,
- amt: 1506,
- },
- {
- name: 'Page C',
- uv: 1397,
- amt: 989,
- },
- {
- name: 'Page D',
- uv: 1480,
- amt: 1228,
- },
- {
- name: 'Page E',
- uv: 1520,
- 
- amt: 1100,
- },
- {
- name: 'Page F',
- uv: 1400,
- 
- amt: 1700,
- },
- ];
-
 
 
 const customIcon = L.icon({
@@ -215,15 +180,15 @@ interface UpdateMapViewProps {
 }
 // Custom component to move the map when new data arrives
 const UpdateMapView = ({position}:UpdateMapViewProps) => {
- if (typeof window !== 'undefined' && position) {
-const map = useMap();
-useEffect(() => {
-if (position) {
-map?.setView(position, 15);
-}
-}, [position, map]);
-return null;
- }
+  if (typeof window !== 'undefined' && position) {
+    const map = useMap();
+    useEffect(() => {
+        if (position) {
+          map?.setView(position, 15);
+        }
+      }, [position, map]);
+    return null;
+  }
 };
 
 const LiveMap:React.FC<live_tractor_prop> = ({tractor_id}) => {
@@ -244,7 +209,7 @@ const [coolantTemp, setCoolantTemp] = useState<number>(0);
 const [batteryVoltage, setBatteryVoltage] = useState<number>(0);
 const [activeDTCs, setActiveDTCs] = useState<number>(0);
 const [healedDTCs, setHealedDTCs] = useState<number>(0);
- const [newHMR, setNewHMR] = useState<string>("00:00:00"); 
+ const [NewHMR, setNewHMR] = useState<string>("00:00:00"); 
 const [dtcData,setDtcData] = useState<DTCData[]>([
   { code: 'P0183-00', status: "-1", description:'Water in Fuel'},
   { code: 'P0193-12', status: "-1", description:'Metering Unit'},
@@ -278,7 +243,7 @@ const handleClose = () => {
  // Generate array of all dates from start to yesterday inclusive
  const allDates: string[] = [];
  for (let d = start; d.isBefore(yesterday) || d.isSame(yesterday, 'day'); d = d.add(1, 'day')) {
- allDates.push(d.format('YYYY-MM-DD'));
+  allDates.push(d.format('YYYY-MM-DD'));
  }
 
 
@@ -331,6 +296,12 @@ const timeToSeconds = (time: string): number => {
   return hours * 3600 + minutes * 60 + seconds;
 };
 
+const timeToSecondsForHMR = (time: string): number => {
+  const [hours, minutes, seconds] = time.split(':').map(Number);
+  return hours * 3600 + minutes * 60 + seconds;
+};
+
+
 const secondsToTime = (seconds: number): string => {
  const hours = Math.floor(seconds / 3600);
  const minutes = Math.floor((seconds % 3600) / 60);
@@ -352,18 +323,27 @@ useEffect(() => {
  let HMR = 0
  const fetchDetails = async () => {
  try {
+  const todayIST = new Date().toLocaleDateString('en-CA', {
+        timeZone: 'Asia/Kolkata'
+      }); 
 
- const res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/live/${tractor_id}`);
-//  console.log(res?.data)
+  const [year, month, day] = todayIST.split('-');
+
+  const formattedDate = `${year.slice(2)}/${month}/${day}`;
+
+  console.log(formattedDate);
+  const newTractorID = tractor_id.trim();
+  const res = await axios.get(`https://fdcserver.escortskubota.com/telematics/device-data/${newTractorID}?date=${formattedDate}`);
+  console.log(res.data?.payloads)
 
  if(res.status==200){
  let lastTimestamp: string | null = null; 
 //  console.log(lastTimestamp)
 
- const newData = res.data
+ const newData = res.data?.payloads
  .filter((item: any) => {
- const latitude = item.message.LATITUDE;
- const longitude = item.message.LONGITUDE;
+ const latitude = item.LATITUDE;
+ const longitude = item.LONGITUDE;
  
  return (
  latitude !== '0.0000' && latitude !== '0.000000' &&
@@ -373,51 +353,51 @@ useEffect(() => {
  );
  })
  .map((item: any) => {
- const updatedEngineRpm = item.message.ENGINE_RPM < 649 ? 0 : item.message.ENGINE_RPM;
+ const updatedEngineRpm = item.ENGINE_RPM < 649 ? 0 : item.ENGINE_RPM;
  
  return {
- TIME: item.message.TIME,
- DEVICE_ID: item.message.DEVICE_ID,
- LATITUDE: calculateDecimal(item.message.LATITUDE),
- LONGITUDE: calculateDecimal(item.message.LONGITUDE),
- ALTITUDE: item.message.ALTITUDE,
- SPEED: item.message.SPEED,
- FUEL_LEVEL: item.message.FUEL_LEVEL,
+ TIME: item.TIME,
+ DEVICE_ID: item.DEVICE_ID,
+ LATITUDE: calculateDecimal(item.LATITUDE),
+ LONGITUDE: calculateDecimal(item.LONGITUDE),
+ ALTITUDE: item.ALTITUDE,
+ SPEED: item.SPEED,
+ FUEL_LEVEL: item.FUEL_LEVEL,
  ENGINE_RPM: updatedEngineRpm,
- BATTERY_VOLTAGE:item.message.BATTERY_VOLTAGE,
- ENG_TEMP:item.message.ENG_TEMP,
- COOLANT_TEMP:item.message.COOLANT_TEMP,
- FUEL_TEMP:item.message.FUEL_TEMP,
- P2264_13:item.message["P2264-13"],
- P0251_13:item.message["P0251-13"],
- P0193_12:item.message["P0193-12"],
- P0183_00:item.message["P0183-00"],
+ BATTERY_VOLTAGE:item.BATTERY_VOLTAGE,
+ ENG_TEMP:item.ENG_TEMP,
+ COOLANT_TEMP:item.COOLANT_TEMP,
+ FUEL_TEMP:item.FUEL_TEMP,
+ P2264_13:item["P2264-13"],
+ P0251_13:item["P0251-13"],
+P0183_00:item["P0183-00"],
+ P0193_12:item["P0193-12"],
  };
  })
  .filter((value: any, index: any, self: any) => {
  return index === self.findIndex((t: any) => t.TIME === value.TIME);
  });
 
-const dataHMR = res.data.map((item: any) => {
- const updatedEngineRpm = item.message.ENGINE_RPM < 100 ? 0 : item.message.ENGINE_RPM;
+const dataHMR = res.data?.payloads.map((item: any) => {
+ const updatedEngineRpm = item.ENGINE_RPM < 100 ? 0 : item.ENGINE_RPM;
  
  return {
- TIME: item.message.TIME,
- DEVICE_ID: item.message.DEVICE_ID,
- LATITUDE: calculateDecimal(item.message.LATITUDE),
- LONGITUDE: calculateDecimal(item.message.LONGITUDE),
- ALTITUDE: item.message.ALTITUDE,
- SPEED: item.message.SPEED,
- FUEL_LEVEL: item.message.FUEL_LEVEL,
+ TIME: item.TIME,
+ DEVICE_ID: item.DEVICE_ID,
+ LATITUDE: calculateDecimal(item.LATITUDE),
+ LONGITUDE: calculateDecimal(item.LONGITUDE),
+ ALTITUDE: item.ALTITUDE,
+ SPEED: item.SPEED,
+ FUEL_LEVEL: item.FUEL_LEVEL,
  ENGINE_RPM: updatedEngineRpm,
- BATTERY_VOLTAGE:item.message.BATTERY_VOLTAGE,
- ENG_TEMP:item.message.ENG_TEMP,
- COOLANT_TEMP:item.message.COOLANT_TEMP,
- FUEL_TEMP:item.message.FUEL_TEMP,
- P2264_13:item.message["P2264-13"],
- P0251_13:item.message["P0251-13"],
- P0193_12:item.message["P0193-12"],
- P0183_00:item.message["P0183-00"],
+ BATTERY_VOLTAGE:item.BATTERY_VOLTAGE,
+ ENG_TEMP:item.ENG_TEMP,
+ COOLANT_TEMP:item.COOLANT_TEMP,
+ FUEL_TEMP:item.FUEL_TEMP,
+ P2264_13:item["P2264-13"],
+ P0251_13:item["P0251-13"],
+ P0193_12:item["P0193-12"],
+ P0183_00:item["P0183-00"],
  };
  })
  .filter((value: any, index: any, self: any) => {
@@ -565,15 +545,15 @@ setHealedDTCs(healed)
  let allData : ChartData[] = []
 useEffect(() => {
   // console.log("in")
-const socket = new WebSocket("wss://fdcserver.escortskubota.com/ws/"); // Change to your WebSocket server
+const socket = new WebSocket("wss://fdcserver.escortskubota.com/ws/"); 
 socket.onopen = () => {
-  // console.log("in1")
-console.log("Connected to WebSocket");
+    // console.log("in1")
+  console.log("Connected to WebSocket");
 };
 
 socket.onmessage = (event) => {
 try {
-//  console.log("Event data",event?.data)
+ console.log("Event data",event)
 //  console.log(tractor_id,typeof tractor_id);
  const data = JSON.parse(event?.data);
 //  console.log(data);
@@ -598,7 +578,7 @@ try {
  !isNaN(parseFloat(data["P0251-13"]))&&
  !isNaN(parseFloat(data["P0193-12"]))&&
  !isNaN(parseFloat(data["P0183-00"]))) {
-//  console.log("i am innnnn")
+ console.log(data)
  setData((prevData) => {
  const updatedData = [
  ...prevData,
@@ -732,7 +712,8 @@ useEffect(()=>{
  try{
  if(Data){
  let distance = totalDistance
- let newHMR = timeToSeconds(HMR)
+ let newHMR = timeToSecondsForHMR(NewHMR)
+ console.log("New HMR:", newHMR);
  let allDataLenght = Data.length
  let last = Data[allDataLenght-1]
  let secondLast = Data[allDataLenght-2]
@@ -741,16 +722,17 @@ useEffect(()=>{
  const lon1 = parseFloat(last?.LONGITUDE);
  const lat2 = parseFloat(secondLast?.LATITUDE);
  const lon2 = parseFloat(secondLast?.LONGITUDE);
- if(last?.TIME != "Error: Invalid time format" && secondLast?.TIME != "Error: Invalid time format" && isValidDateFormat(last?.TIME) && isValidDateFormat(secondLast?.TIME)){
- const dif = timeToSeconds(last?.TIME) - timeToSeconds(secondLast?.TIME)
- if(lat1 != lat2 || lon1 != lon2){
- if(dif<=1200 && dif > 0 ){
- newHMR += dif
- }
- }
- distance += haversine(lat1, lon1, lat2, lon2);
- setTotalDistance(distance)
- setHMR(secondsToTime(newHMR))
+ if(last?.TIME != "Error: Invalid time format" && secondLast?.TIME != "Error: Invalid time format"){
+  console.log("in in in")
+  const dif = timeToSeconds(last?.TIME) - timeToSeconds(secondLast?.TIME)
+  if(lat1 != lat2 || lon1 != lon2){
+    if(dif<=600 && dif > 0 ){
+      newHMR += dif
+    }
+  }
+  distance += haversine(lat1, lon1, lat2, lon2);
+  setTotalDistance(distance)
+  setNewHMR(secondsToTime(newHMR))
  }
  }
  
@@ -804,7 +786,7 @@ const fetchLocation = async () => {
  }
 
  useEffect(() => {
- const intervalId = setInterval(fetchLocation, 10000);
+ const intervalId = setInterval(fetchLocation, 60000); // Fetch location every 60 seconds
  return () => {
  clearInterval(intervalId);
  };
@@ -840,7 +822,7 @@ return (
       >
         <TelemetryCard icon={<SpeedIcon />} label="Speed" value={speed.toFixed(2)} unit="km/h" />
         <TelemetryCard icon={<StraightenIcon />} label="Distance" value={totalDistance.toFixed(2)} unit="km" />
-        <TelemetryCard icon={<AccessAlarmIcon />} label="HMR" value={newHMR} />
+        <TelemetryCard icon={<AccessAlarmIcon />} label="HMR" value={NewHMR} />
         <TelemetryCard icon={<LocationOnIcon />} label="Location" value={location[0]} />
         <TelemetryCard icon={<WhatshotIcon />} label="Engine Temp" value={engTemp.toFixed(2)} unit="°C" />
         <TelemetryCard icon={<OpacityIcon />} label="Fuel Temp" value={fuelTemp.toFixed(2)} unit="°C" />
