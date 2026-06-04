@@ -173,6 +173,8 @@ const handleOpen = (dtc: string) => {
   setOpen(true);
 };
 
+console.log(tractor_id, date);
+
 const handleClose = () => {
   setOpen(false);
   setSelectedDtc('');
@@ -253,10 +255,19 @@ async function getLocationFromCoordinates(
  let HMR = 0
  const fetchDetails = async () => {
  try {
- 
- const res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/historic?date=${date}&tractor_id=${tractor_id}`);
+let res:any
+let apiData
+ const newDate = date.replace(/^(\d{2})(\d{2})-(\d{2})-(\d{2})$/, "$2/$3/$4");
+ const newtractor_id = tractor_id.trim();
+ if(date > "2026-05-31"){
+   res = await axios.get(`https://fdcserver.escortskubota.com/telematics/device-data/${newtractor_id}?date=${newDate}`);
+   apiData = res.data?.payloads
+ }else {
+  res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/historic?date=${date}&tractor_id=${tractor_id}`)
+  apiData = res.data.result?.data
+ }
  console.log(res)
- if(res.status==200){
+ if(res?.status==200){
  function addTimeToCurrentTime(currentTime:string) {
  const additionalTime = "5:30"
  const time = currentTime.match(/(\d{2}:\d{2}:\d{2})/)?.[0];
@@ -274,7 +285,7 @@ async function getLocationFromCoordinates(
  
  return formattedTime;
  } 
- const newData = res.data.result?.data
+ const newData = apiData
  .filter((item: any) => item.LATITUDE !== '0.000000' && item.LONGITUDE !== '0.000000'&& item.LATITUDE !== '0.0000' && item.LONGITUDE !== '0.0000' && item.LATITUDE !== 0 && item.LONGITUDE !== 0 ) 
  .map((item: any) => {
  const updatedEngineRpm = item.ENGINE_RPM < 650 ? 0 : item.ENGINE_RPM; //change 650 to 100
@@ -306,7 +317,7 @@ async function getLocationFromCoordinates(
 
 
  //start HMR calculation
-const dataHMR = res.data.result?.data.map((item: any) => {
+const dataHMR = apiData.map((item: any) => {
  const updatedEngineRpm = item.ENGINE_RPM < 0 ? 0 : item.ENGINE_RPM; //change 650 to 100
  
  return {

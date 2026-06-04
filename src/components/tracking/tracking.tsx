@@ -64,12 +64,12 @@ const Tracking: React.FC<tractor_props> = ({ tractor_id, tractor_number}) => {
  try {
  const res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/getTractorHistory/${tractor_id}`);
  let dates:string[]=[];
- console.log(res.data.resp)
+//  console.log(res.data.resp)
  res?.data?.resp?.forEach((el: any) => {
   if (el?.date) dates.push(el.date);
 });
 
-console.log(dates);
+// console.log(dates);
  setAvailableDates(dates);
  }
  catch(err){
@@ -130,7 +130,7 @@ console.log(dates);
   if (newDate) {
     const formattedDate = newDate.format('YYYY-MM-DD');
     setDate(formattedDate);
-    console.log("Selected Date:", formattedDate);
+    // console.log("Selected Date:", formattedDate);
   }
 };
 
@@ -141,12 +141,19 @@ console.log(dates);
   useEffect(() => {
     const fetchLastTimeStamp = async () => {
       try {
-        // Make the API request
-        const res = await axios.get(
-          `https://fdcserver.escortskubota.com/fdc/tripData/historic?date=${date}&tractor_id=${tractor_id}`
-        );
-        console.log(res?.data?.result?.data?.at(-1).TIME); // Log the response
-        setLastUpdatedTimestamp(res?.data?.result?.data?.at(-1).TIME); // Set the response data to state (if needed)
+          const todayIST = new Date().toLocaleDateString('en-CA', {
+          timeZone: 'Asia/Kolkata'
+        });
+
+        const [year, month, day] = todayIST.split('-');
+
+        const formattedDate = `${year.slice(2)}/${month}/${day}`;
+
+        console.log(formattedDate);
+        const newTractorID = tractor_id.trim();
+        const res = await axios.get(`https://fdcserver.escortskubota.com/telematics/device-data/${newTractorID}?date=${formattedDate}`);
+        // console.log(res); // Log the response
+        setLastUpdatedTimestamp(res?.data?.payloads?.at(-1)?.TIME); // Set the response data to state (if needed)
       } catch (err) {
         console.error("Error fetching data:", err); // Handle errors
       }
@@ -161,13 +168,20 @@ console.log(dates);
   useEffect(() => {
     const fetchLastTimeStamp2 = async () => {
       try {
-        // Make the API request
-        const res = await axios.get(
-          `https://fdcserver.escortskubota.com/fdc/tripData/live/${tractor_id}`
-        );
-        console.log(res?.data?.at(-1).message?.TIME); // Log the response
-        console.log(res); 
-        setLastUpdatedTimestamp(res?.data?.at(-1).message?.TIME); // Set the response data to state (if needed)
+          const todayIST = new Date().toLocaleDateString('en-CA', {
+          timeZone: 'Asia/Kolkata'
+        });
+
+        const [year, month, day] = todayIST.split('-');
+
+        const formattedDate = `${year.slice(2)}/${month}/${day}`;
+
+        console.log(formattedDate);
+        const newTractorID = tractor_id.trim();
+        const res = await axios.get(`https://fdcserver.escortskubota.com/telematics/device-data/${newTractorID}?date=${formattedDate}`);
+        // console.log(res?.data?.at(-1).message?.TIME); // Log the response
+        // console.log(res?.data?.payloads?.at(-1)?.TIME); // Log the response
+        setLastUpdatedTimestamp(res?.data?.payloads?.at(-1)?.TIME); // Set the response data to state (if needed)
       } catch (err) {
         console.error("Error fetching data:", err); // Handle errors
       }
@@ -204,8 +218,8 @@ console.log(dates);
   let allData: ChartData[] = [];
 
   React.useEffect(() => {
-    console.log("COnnecting to ws")
-    const socket = new WebSocket("wss://fdcserver.escortskubota.com/ws/"); // Change to your WebSocket server
+    // console.log("COnnecting to ws")
+    const socket = new WebSocket("wss://fdcserver.escortskubota.com/ws/"); 
     socket.onopen = () => {
       console.log("Connected to WebSocket");
     };
@@ -213,7 +227,7 @@ console.log(dates);
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event?.data);
-        console.log(data,tractor_id);
+        // console.log(data,tractor_id);
         if (data && 
           data.DEVICE_ID == `${tractor_id} ` &&
           data.DEVICE_ID && 
@@ -235,9 +249,9 @@ console.log(dates);
             ENGINE_RPM: parseFloat(data.ENGINE_RPM),
             IGNITION: parseFloat(data.IGNITION),
           };
-          console.log("239")
+          // console.log("239")
           allData.push(commingData);
-          console.log(allData)
+          // console.log(allData)
           setLastUpdatedTimestamp(data.TIME);
         }
 
@@ -259,17 +273,16 @@ console.log(dates);
     };
   }, []);
   function checkStatus() {
-    console.log("ajdadjwak")
-    console.log(allData)
+    // console.log(allData)
     if(allData.length>0){
     let allDataLength = allData.length;
-    console.log(allDataLength)
+    // console.log(allDataLength)
     let lastPos = allData[allDataLength-1];
     // let lastTime = timeToSeconds(lastPos?.TIME);
     // const currentDate = new Date();
     // const currentTime = timeToSeconds(currentDate.toTimeString().slice(0,8))
     // console.log(currentTime);
-    console.log(lastPos) 
+    // console.log(lastPos) 
     if(lastPos.SPEED>0)
         setStatus("Running")
     else if(lastPos.ENGINE_RPM>650 && lastPos.IGNITION===1.000000)
@@ -282,7 +295,7 @@ console.log(dates);
   }
   
   useEffect(() => {
-    console.log("12sec")
+    // console.log("12sec")
     const intervalId = setInterval(checkStatus, 12000);
     return () => {
       clearInterval(intervalId);
@@ -297,7 +310,7 @@ console.log(dates);
   
     // Step 3: Add 5 hours and 30 minutes
     const updatedTime = time.add(0, 'hour').add(0, 'minute');
-    console.log(updatedTime);
+    // console.log(updatedTime);
     // Step 4: Return the updated time in 'hh:mm A' (AM/PM) format
     return updatedTime.format('hh:mm:ss A');
   };
@@ -325,7 +338,7 @@ console.log(dates);
             <Box sx={{
               width: '85px',
               padding: '1px 17px',
-              margin: '10px',
+              marginTop:'35px',
               height: '25px',
               borderRadius: '7px',
               opacity: 0.9,
