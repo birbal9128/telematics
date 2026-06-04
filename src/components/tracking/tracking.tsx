@@ -54,7 +54,7 @@ interface ChartData {
 const Tracking: React.FC<tractor_props> = ({ tractor_id, tractor_number}) => {
   // const [newData, setNewData] = useState<Data>(Object);
   const [date, setDate] = useState<string>('');
-  const [today, setToday] = useState(dayjs().format('YYYY-MM-DD')); // Use Day.js
+  const [today, setToday] = useState(dayjs().format('YY/MM/DD')); // Use Day.js
   const [status, setStatus] = useState<string>("Stopped");
   const [lastUpdatedTimestamp, setLastUpdatedTimestamp] = useState<string>('');
   const [availableDates,setAvailableDates] = useState<string[]>([]);
@@ -128,32 +128,32 @@ const Tracking: React.FC<tractor_props> = ({ tractor_id, tractor_number}) => {
  // Handle date change correctly and set the selected date
  const handleDateChange = (newDate: Dayjs | null) => {
   if (newDate) {
-    const formattedDate = newDate.format('YYYY-MM-DD');
+    const formattedDate = newDate.format('YYYY-MM-DD'); // Format the date as needed
     setDate(formattedDate);
     // console.log("Selected Date:", formattedDate);
   }
 };
 
   useEffect(() => {
-    setToday(dayjs().format('YYYY-MM-DD')); // Set today's date using Day.js
+    setToday(dayjs().format('YY/MM/DD')); // Set today's date using Day.js
   }, []);
 
   useEffect(() => {
     const fetchLastTimeStamp = async () => {
       try {
-          const todayIST = new Date().toLocaleDateString('en-CA', {
-          timeZone: 'Asia/Kolkata'
-        });
-
-        const [year, month, day] = todayIST.split('-');
-
-        const formattedDate = `${year.slice(2)}/${month}/${day}`;
-
-        console.log(formattedDate);
+        let res:any
+        let apiData
         const newTractorID = tractor_id.trim();
-        const res = await axios.get(`https://fdcserver.escortskubota.com/telematics/device-data/${newTractorID}?date=${formattedDate}`);
+        const newDate = date.replace(/^(\d{2})(\d{2})-(\d{2})-(\d{2})$/, "$2/$3/$4");
+         if(date > "2026-05-31"){
+          res = await axios.get(`https://fdcserver.escortskubota.com/telematics/device-data/${newTractorID}?date=${newDate}`);
+          apiData = res.data?.payloads
+        }else {
+          res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/historic?date=${date}&tractor_id=${tractor_id}`)
+          apiData = res.data.result?.data
+        }
         // console.log(res); // Log the response
-        setLastUpdatedTimestamp(res?.data?.payloads?.at(-1)?.TIME); // Set the response data to state (if needed)
+        setLastUpdatedTimestamp(apiData?.at(-1)?.TIME); // Set the response data to state (if needed)
       } catch (err) {
         console.error("Error fetching data:", err); // Handle errors
       }
@@ -168,17 +168,8 @@ const Tracking: React.FC<tractor_props> = ({ tractor_id, tractor_number}) => {
   useEffect(() => {
     const fetchLastTimeStamp2 = async () => {
       try {
-          const todayIST = new Date().toLocaleDateString('en-CA', {
-          timeZone: 'Asia/Kolkata'
-        });
-
-        const [year, month, day] = todayIST.split('-');
-
-        const formattedDate = `${year.slice(2)}/${month}/${day}`;
-
-        console.log(formattedDate);
         const newTractorID = tractor_id.trim();
-        const res = await axios.get(`https://fdcserver.escortskubota.com/telematics/device-data/${newTractorID}?date=${formattedDate}`);
+        const res = await axios.get(`https://fdcserver.escortskubota.com/telematics/device-data/${newTractorID}?date=${today}`);
         // console.log(res?.data?.at(-1).message?.TIME); // Log the response
         // console.log(res?.data?.payloads?.at(-1)?.TIME); // Log the response
         setLastUpdatedTimestamp(res?.data?.payloads?.at(-1)?.TIME); // Set the response data to state (if needed)
