@@ -23,6 +23,7 @@ import {
 } from 'recharts';
 import axios from "axios";
 import { Backdrop, Box, Button, Card, CardContent, Fade, Modal, Typography } from "@mui/material";
+import { Loader } from "../loader/laoder";
 
 interface WebSocketData {
  DEVICE_ID: string;
@@ -172,6 +173,7 @@ const handleOpen = (dtc: string) => {
   setSelectedDtc(dtc);
   setOpen(true);
 };
+const [isPending, setIsPending] = useState<boolean>(false);
 
 console.log(tractor_id, date);
 
@@ -251,6 +253,7 @@ async function getLocationFromCoordinates(
 
 
  useEffect(() => {
+  setIsPending(true)
  setData([])
  let HMR = 0
  const fetchDetails = async () => {
@@ -440,13 +443,16 @@ setHealedDTCs(healed)
  console.log(secondsToTime(HMR))
  setHMR(secondsToTime(HMR))
  setDistance(totalDistance)
+ setIsPending(false)
  }
  else{
  console.log("failed to load data")
+  setIsPending(false)
  }
 
  } catch (err) {
  console.log(err)
+  setIsPending(false)
  } 
  };
 
@@ -792,6 +798,8 @@ setHealedDTCs(healed)
  </div>
  </div>
  </div>:<div>No data avilable</div>}
+
+ {isPending && <Loader />}
 </>
 
 

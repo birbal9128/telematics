@@ -376,7 +376,7 @@ const Tracking: React.FC<tractor_props> = ({ tractor_id, tractor_number}) => {
         </div>
       </div>
 
-      <div className="col-span-12 mt-5">
+      <div className="col-span-12">
         {(date === today || !date) ? <LiveMap tractor_id={tractor_id} /> : <PathMap tractor_id={tractor_id} date={date} />}
       </div>
     </div>
