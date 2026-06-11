@@ -28,6 +28,7 @@ import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import dayjs from 'dayjs';
 import { set } from "react-hook-form";
 import { count } from "console";
+import { Loader } from "../loader/laoder";
 
 interface WebSocketData {
 DEVICE_ID: string;
@@ -225,6 +226,7 @@ const longRef = useRef(long);
 const [open, setOpen] = useState<boolean>(false);
 const [selectedDtc, setSelectedDtc] = useState<string>('');
 const [pointTime, setPointTime] = useState<string[]>([]); 
+const [isPending, setIsPending] = useState<boolean>(false);
 
 const handleOpen = (dtc: string) => {
   // console.log(dtc)
@@ -319,6 +321,7 @@ const secondsToTime = (seconds: number): string => {
 
 
 useEffect(() => {
+  setIsPending(true)
  setData([])
  let HMR = 0
  const fetchDetails = async () => {
@@ -512,14 +515,17 @@ setHealedDTCs(healed)
  setPositions(positions)
  const time = newData.map((point:any) => point.TIME);
  setPointTime(time)
+ setIsPending(false)
  }
  }
  else{
  console.log("failed to load data")
+ setIsPending(false)
  }
 
  } catch (err) {
  console.log(err)
+ setIsPending(false)
  } 
  };
 
@@ -1093,8 +1099,8 @@ flexDirection: 'column'
  </Card>
 </Box>
 
+{isPending && <Loader />}
 </div>
-
 );
 };
 

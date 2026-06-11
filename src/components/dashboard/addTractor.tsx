@@ -25,11 +25,10 @@ import { Typography } from '@mui/material';
 import axios from 'axios';
 
 const schema = zod.object({
- TractorId: zod.coerce.string(),
- TractorName: zod.coerce.string(),
- TractorNumber: zod.coerce.string(),
- EngineNumber: zod.coerce.string(),
- ChassisNumber: zod.coerce.string(),
+  TractorId: zod.string().min(1, "Tractor ID is required"),
+  TractorName: zod.string().min(1, "Tractor Name is required"),
+  TractorNumber: zod.string().min(1, "Tractor Number is required"),
+  ECUType: zod.string().min(1, "Please select ECU Type"),
 });
 export type Values = zod.infer<typeof schema>;
 
@@ -48,23 +47,23 @@ interface addTractorProps {
  TractorId:'',
  TractorName:'',
  TractorNumber:'',
-EngineNumber:'',
-ChassisNumber:''
+ECUType:''
 
  }, resolver: zodResolver(schema)
  });
+
+ const dropdown = ["CRDI", "Non-CRDI"]
 
 
 
  const onSubmit: SubmitHandler<Values> = async (data) => {
  try {
- console.log({...data});
- const TractorId= data.TractorId
- const TractorName = data.TractorName;
- const TractorNumber = data.TractorNumber
- const res = await axios.post(`https://fdcserver.escortskubota.com/fdc/tractor/initiate`, {
- TractorId,TractorName,TractorNumber
- })
+
+const { TractorId, TractorName, TractorNumber, ECUType } = data;
+
+const res = await axios.post(
+  `https://fdcserver.escortskubota.com/fdc/tractor/initiate?TractorId=${TractorId}&TractorName=${TractorName}&TractorNumber=${TractorNumber}&type=${ECUType}`
+);
  console.log(res)
  if(res?.data?.success == true){
  setModal(false)
@@ -88,94 +87,159 @@ ChassisNumber:''
  return (
  <>
  <form onSubmit={handleSubmit(onSubmit)}>
- <Box
- sx={{
- position: 'fixed',
- top: 0,
- left: 0,
- width: '100%',
- height: '100%',
- display: 'flex',
- justifyContent: 'center',
- alignItems: 'center',
- backgroundColor: 'rgba(0, 0, 0, 0.7)',
- zIndex: 1111,
- }}>
- <Card sx={{ width: '90%', maxWidth: 500 }}>
- <CardHeader title="Add Tractor Data" />
- <Divider />
- <CardContent>
- <Grid container spacing={3}>
+<Box
+  sx={{
+    position: "fixed",
+    inset: 0,
+    bgcolor: "rgba(0,0,0,0.6)",
+    backdropFilter: "blur(4px)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    p: 2,
+    zIndex: 1300,
+  }}
+>
+<Card
+  sx={{
+    width: "95%",
+    maxWidth: 700,
+    borderRadius: 4,
+    boxShadow: 10,
+  }}
+>
+  <CardHeader
+    title="🚜 Add Tractor"
+    subheader="Enter tractor information"
+    sx={{
+      bgcolor: "primary.main",
+      color: "white",
+      "& .MuiCardHeader-subheader": {
+        color: "rgba(255,255,255,0.8)",
+      },
+    }}
+  />
 
- <Controller
- name="TractorId"
- control={control}
- render={({ field }) => (
- <FormControl fullWidth>
- <InputLabel>Tractor ID</InputLabel>
- <OutlinedInput {...field} label="Tractor ID" />
- 
- </FormControl>
- )}
- />
+  <CardContent sx={{ pt: 4 }}>
+    <Grid container spacing={3}>
 
- <Controller
- name="TractorName"
- control={control}
- render={({ field }) => (
- <FormControl fullWidth>
- <InputLabel>Tractor Model</InputLabel>
- <OutlinedInput {...field} label="Tractor Model" />
- 
- </FormControl>
- )}
- />
+      {/* Tractor ID */}
+      <Grid size={{ xs: 12, md: 6 }}>
+        <Controller
+          name="TractorId"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              fullWidth
+              label="Tractor ID"
+              error={!!errors.TractorId}
+              helperText={errors.TractorId?.message}
+            />
+          )}
+        />
+      </Grid>
 
- <Controller
- name="TractorNumber"
- control={control}
- render={({ field }) => (
- <FormControl fullWidth>
- <InputLabel>Tractor Number</InputLabel>
- <OutlinedInput {...field} label="Tractor Number" />
- 
- </FormControl>
- )}
- />
+      {/* Tractor Model */}
+      <Grid size={{ xs: 12, md: 6 }}>
+        <Controller
+          name="TractorName"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              fullWidth
+              label="Tractor Model"
+              error={!!errors.TractorName}
+              helperText={errors.TractorName?.message}
+            />
+          )}
+        />
+      </Grid>
 
-<Controller
- name="EngineNumber"
- control={control}
- render={({ field }) => (
- <FormControl fullWidth>
- <InputLabel>Engine Number</InputLabel>
- <OutlinedInput {...field} label="Engine Number" />
- 
- </FormControl>
- )}
- />
+      {/* Tractor Number */}
+      <Grid size={{ xs: 12, md: 6 }}>
+        <Controller
+          name="TractorNumber"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              fullWidth
+              label="Tractor Number"
+              placeholder="DL01AB1234"
+              error={!!errors.TractorNumber}
+              helperText={errors.TractorNumber?.message}
+            />
+          )}
+        />
+      </Grid>
 
-<Controller
- name="ChassisNumber"
- control={control}
- render={({ field }) => (
- <FormControl fullWidth>
- <InputLabel>Chassis Number</InputLabel>
- <OutlinedInput {...field} label="Chassis Number" />
- 
- </FormControl>
- )}
- />
+      {/* Engine type */}
+<Grid size={{ xs: 12, md: 6 }}>
+  <Controller
+    name="ECUType"
+    control={control}
+    render={({ field }) => (
+      <FormControl fullWidth>
+        <InputLabel id="ecu-type-label">ECU Type</InputLabel>
 
+        <Select
+          labelId="ecu-type-label"
+          label="ECU Type"
+          value={field.value || ""}
+          onChange={(e) => field.onChange(e.target.value)}
+        >
+          <MenuItem value="">
+            <em>Select ECU Type</em>
+          </MenuItem>
 
- </Grid>
- </CardContent>
- <Divider />
- <CardActions sx={{ justifyContent: 'flex-end' }}>
- <Button disabled={isPending} variant="contained" onClick={() => setModal(false)}>Cancel</Button>
- <Button disabled={isPending} variant="contained" type="submit">Save</Button>
- </CardActions>
- </Card>
+          {dropdown.map((item) => (
+            <MenuItem key={item} value={item}>
+              {item}
+            </MenuItem>
+          ))}
+        </Select>
+
+        {errors.ECUType && (
+          <FormHelperText error>
+            {errors.ECUType.message}
+          </FormHelperText>
+        )}
+      </FormControl>
+    )}
+  />
+</Grid>
+
+    </Grid>
+  </CardContent>
+
+  <Divider />
+
+  <CardActions
+    sx={{
+      p: 3,
+      justifyContent: "space-between",
+    }}
+  >
+    <Button
+      variant="outlined"
+      color="inherit"
+      onClick={() => setModal(false)}
+    >
+      Cancel
+    </Button>
+
+    <Button
+      variant="contained"
+      type="submit"
+      disabled={isPending}
+      size="large"
+    >
+      {isPending ? "Saving..." : "Save Tractor"}
+    </Button>
+  </CardActions>
+</Card>
  </Box>
  </form>
  </>
