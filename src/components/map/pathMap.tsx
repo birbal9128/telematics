@@ -562,7 +562,7 @@ setHealedDTCs(healed)
  </div>
  
 
- {centerPosition?<Map center={centerPosition} zoom={15} style={{marginLeft:'15px', height: "500px", width: "95%", marginTop:"20px" }}>
+ {centerPosition?<Map center={centerPosition} zoom={15} style={{marginLeft:'15px', height: "500px", width: "95%", marginTop:"20px" ,    zIndex: 0 }}>
  <TileLayer
     url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
     zIndex={1}

@@ -837,7 +837,7 @@ return (
       </Box>
     </Box>
 
-<Map center={positions[0]} zoom={20} style={{ borderRadius:'10px', marginLeft:'15px', height: "500px", width: "95%", marginTop:"20px" }}>
+<Map center={positions[0]} zoom={20} style={{ borderRadius:'10px', marginLeft:'15px', height: "500px", width: "95%", marginTop:"20px",    zIndex: 0 }}>
 <TileLayer
  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
