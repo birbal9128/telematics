@@ -298,7 +298,7 @@ React.useEffect(() => {
         <Divider />
         <Table stickyHeader>
           {tractorData.length ==0 ? <caption style={{textAlign:'center',marginTop:10}}>No farm Found</caption>:<></>}
-          <TableHead sx={{ position: 'sticky', top: 0 , zIndex:90}}>
+          <TableHead sx={{ position: 'sticky', top: 0}}>
             <TableRow>
               <TableCell sx={{ fontWeight: 'bold' ,color: '#000000 !important'}} align="center" colSpan={10}>
                 Tractor Dashboard
