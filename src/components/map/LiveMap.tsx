@@ -1067,7 +1067,7 @@ flexDirection: 'column'
 <ResponsiveContainer width="100%" height={200}>
 <AreaChart
   data={hmrGraph}
-  syncId="rpmChart"
+  syncId="hmrChart"
   margin={{ top: 10, right: 0, left: 30, bottom: 0 }}
 >
   <CartesianGrid strokeDasharray="3 3" />
