@@ -64,7 +64,7 @@ const Tracking: React.FC<tractor_props> = ({ tractor_id, tractor_number}) => {
  try {
  const res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/getTractorHistory/${tractor_id}`);
  let dates:string[]=[];
-//  console.log(res.data.resp)
+ console.log(res.data.resp)
  res?.data?.resp?.forEach((el: any) => {
   if (el?.date) dates.push(el.date);
 });
