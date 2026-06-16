@@ -22,7 +22,7 @@ import {
  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Brush, AreaChart, Area, ResponsiveContainer
 } from 'recharts';
 import axios from "axios";
-import { Backdrop, Box, Button, Card, CardContent, Fade, Modal, Typography } from "@mui/material";
+import { Backdrop, Box, Button, Card, CardContent, Fade, Grid, Modal, Typography } from "@mui/material";
 import { Loader } from "../loader/laoder";
 
 interface WebSocketData {
@@ -174,6 +174,8 @@ const handleOpen = (dtc: string) => {
   setOpen(true);
 };
 const [isPending, setIsPending] = useState<boolean>(false);
+const [hmrGraph, setHmrGraph] = useState<{ date: string; hmr: number , labelHMR: string}[]>([]);
+const [cumulativeHMR, setCumulativeHMR] = useState<string>("0 hr");
 
 console.log(tractor_id, date);
 
@@ -186,6 +188,11 @@ const handleClose = () => {
 const toRadians = (degree: number) => {
  return degree * (Math.PI / 180);
 };
+
+const secondsToHr = (seconds: number): string => {
+  return `${(seconds / 3600).toFixed(2)} hr`;
+};
+
 
 // Haversine formula to calculate the distance between two points in kilometers
 const haversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -206,6 +213,11 @@ const timeToSeconds = (time: string): number => {
   const [hours, minutes, seconds] = cleanTime.split(':').map(Number);
   return hours * 3600 + minutes * 60 + seconds;
 };
+
+ const timeToSeconds1 = (time: string): number => {
+ const [hours, minutes, seconds] = time?.split(':')?.map(Number);
+ return hours * 3600 + minutes * 60 + seconds;
+ };
 
 const secondsToTime = (seconds: number): string => {
  const hours = Math.floor(seconds / 3600);
@@ -250,6 +262,36 @@ async function getLocationFromCoordinates(
  return 'Error fetching location';
  }
 }
+
+ useEffect(() => {
+ const fetchDetails = async () => {
+ try {
+ const res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/getTractorHistory/${tractor_id}`);
+ console.log(res.data.resp)
+  let totalSeconds=0
+      const tableData = res.data.resp.map((item: any) => {
+        const seconds = timeToSeconds1(item.hmr);
+        totalSeconds += seconds;
+
+        return {
+          date: item.date,
+          hmr: seconds,
+          labelHMR: item.hmr,
+        };
+      });
+
+setHmrGraph(tableData)
+// console.log(secondsToHr(totalSeconds))
+setCumulativeHMR(secondsToHr(totalSeconds))
+
+ }
+ catch(err){
+ console.log(err)
+ }
+ }
+
+ fetchDetails(); 
+ }, []);
 
 
  useEffect(() => {
@@ -560,127 +602,67 @@ setHealedDTCs(healed)
     </Box>
 
  </div>
- 
+       <Box sx={{ textAlign: 'center', p: 0 }}>
+  <Grid container spacing={2} sx={{marginRight:2, marginLeft:2}}>
+    <Grid size={{ xs: 6 }}>
+      <Card
+        sx={{
+          borderRadius: '10px',
+          backgroundColor: '#F5CD1D',
+          cursor: 'pointer',
+          boxShadow: 3,
+          p: 1,
+          height: '100%',
+        }}
+        onClick={() => handleOpen('0.000000')}
+        variant="outlined"
+      >
+        <CardContent
+          sx={{
+            p: 0,
+            '&:last-child': {
+              pb: 0,
+            },
+          }}
+        >
+          <Typography sx={{ fontWeight: 700 }} variant="subtitle2">
+            Active DTCs
+          </Typography>
+          <Typography variant="h4">{activeDTCs}</Typography>
+        </CardContent>
+      </Card>
+    </Grid>
 
- {centerPosition?<Map center={centerPosition} zoom={15} style={{marginLeft:'15px', height: "500px", width: "95%", marginTop:"20px" ,    zIndex: 0 }}>
- <TileLayer
-    url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
-    zIndex={1}
-  />
-  
-  {/* Transparent labels overlay */}
-  {/* <TileLayer
-    url="https://services.arcgisonline.com/arcgis/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
-    zIndex={2}
-  /> */}
-{position.map((pos, index) => {
-  return (
-    <MarkerComp
-      key={index}
-      position={pos}
-      icon={customIcon} // keep your existing icon
-      eventHandlers={{
-        mouseover: (e) => {
-          e.target.openPopup();   // 👈 open popup on hover
-        },
-        mouseout: (e) => {
-          e.target.closePopup();  // 👈 close popup on leave
-        },
-      }}
-    >
-      <PopupComp>
-        Point {index + 1}: {pos[0]}, {pos[1]} <br />
-        Time: {time[index] || "N/A"}
-      </PopupComp>
-    </MarkerComp>
-  );
-})}
+    <Grid size={{ xs: 6 }}>
+      <Card
+        sx={{
+          borderRadius: '10px',
+          backgroundColor: '#1DF561',
+          cursor: 'pointer',
+          boxShadow: 3,
+          p: 1,
+          height: '100%',
+        }}
+        onClick={() => handleOpen('1.000000')}
+        variant="outlined"
+      >
+        <CardContent
+          sx={{
+            p: 0,
+            '&:last-child': {
+              pb: 0,
+            },
+          }}
+        >
+          <Typography sx={{ fontWeight: 700 }} variant="subtitle2">
+            Healed DTCs
+          </Typography>
+          <Typography variant="h4">{healedDTCs}</Typography>
+        </CardContent>
+      </Card>
+    </Grid>
+  </Grid>
 
-{/* {position.map((pos, index) => (
-  <CircleMarker
-    key={index}
-    center={pos}
-    radius={8} // 👈 hover area (important)
-    pathOptions={{
-      color: 'transparent',
-      fillColor: 'transparent',
-      fillOpacity: 0,
-    }}
-    eventHandlers={{
-      mouseover: (e) => {
-        e.target.openPopup();
-      },
-      mouseout: (e) => {
-        e.target.closePopup();
-      },
-    }}
-  >
-    <PopupComp>
-      Point {index + 1}: {pos[0]}, {pos[1]} <br />
-      Time: {time[index] || "N/A"}
-    </PopupComp>
-  </CircleMarker>
-))} */}
-
- {position?.length > 1 && (
- <PolylineComp positions={position} color="blue" weight={3} />
- )}
- </Map>:<>Map is loading .......</>}
- </div>
-
- {/* Right side: Map and Charts Section */}
- <div style={{
- flex: 1, // Take up 50% of the width
- display: 'flex',
- flexDirection: 'column'
- }}>
- <Box sx={{ textAlign: 'center' }}>
-
-{/* Displaying DTC codes with their status */}
-<Box sx={{ textAlign: 'center' }}>
-      {/* DTC cards */}
-      <Box sx={{ marginBottom: '20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around'}}>
-          <Card
-            sx={{
-              width: '130px',
-              margin: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              borderRadius: '10px',
-              backgroundColor: '#F5CD1D',
-              cursor: 'pointer', // indicate clickable
-              '&:hover': { boxShadow: 6 }, // hover effect
-            }}
-            onClick={() => handleOpen('0.000000')}
-            variant="outlined"
-          >
-            <CardContent>
-              <Typography sx={{fontWeight:'700'}} variant="subtitle2">Active DTCs</Typography>
-              <Typography variant="h4">{activeDTCs}</Typography>
-            </CardContent>
-          </Card>
-          <Card
-            sx={{
-              width: '130px',
-              margin: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              borderRadius: '10px',
-              backgroundColor: '#1DF561',
-              cursor: 'pointer', // indicate clickable
-              '&:hover': { boxShadow: 6 }, // hover effect
-            }}
-            onClick={() => handleOpen('1.000000')}
-            variant="outlined"
-          >
-            <CardContent>
-              <Typography sx={{fontWeight:'700'}} variant="subtitle2">Healed DTCs</Typography>
-              <Typography variant="h4">{healedDTCs}</Typography>
-            </CardContent>
-          </Card>
-      </Box>
 
       {/* Modal Overlay */}
       <Modal
@@ -757,24 +739,150 @@ setHealedDTCs(healed)
         </Fade>
       </Modal>
     </Box>
-</Box>
+ 
+
+ {centerPosition?<Map center={centerPosition} zoom={15} style={{marginLeft:'15px', height: "500px", width: "95%", marginTop:"20px" ,    zIndex: 0 }}>
+ <TileLayer
+    url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+    zIndex={1}
+  />
+  
+  {/* Transparent labels overlay */}
+  {/* <TileLayer
+    url="https://services.arcgisonline.com/arcgis/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+    zIndex={2}
+  /> */}
+{position.map((pos, index) => {
+  return (
+    <MarkerComp
+      key={index}
+      position={pos}
+      icon={customIcon} // keep your existing icon
+      eventHandlers={{
+        mouseover: (e) => {
+          e.target.openPopup();   // 👈 open popup on hover
+        },
+        mouseout: (e) => {
+          e.target.closePopup();  // 👈 close popup on leave
+        },
+      }}
+    >
+      <PopupComp>
+        Point {index + 1}: {pos[0]}, {pos[1]} <br />
+        Time: {time[index] || "N/A"}
+      </PopupComp>
+    </MarkerComp>
+  );
+})}
+
+{/* {position.map((pos, index) => (
+  <CircleMarker
+    key={index}
+    center={pos}
+    radius={8} // 👈 hover area (important)
+    pathOptions={{
+      color: 'transparent',
+      fillColor: 'transparent',
+      fillOpacity: 0,
+    }}
+    eventHandlers={{
+      mouseover: (e) => {
+        e.target.openPopup();
+      },
+      mouseout: (e) => {
+        e.target.closePopup();
+      },
+    }}
+  >
+    <PopupComp>
+      Point {index + 1}: {pos[0]}, {pos[1]} <br />
+      Time: {time[index] || "N/A"}
+    </PopupComp>
+  </CircleMarker>
+))} */}
+
+ {position?.length > 1 && (
+ <PolylineComp positions={position} color="blue" weight={3} />
+ )}
+ </Map>:<>Map is loading .......</>}
+ </div>
+
+ {/* Right side: Map and Charts Section */}
+ <div style={{
+ flex: 1, // Take up 50% of the width
+ display: 'flex',
+ flexDirection: 'column'
+ }}>
+
 
  <div style={{paddingLeft:'30px', width: '100%' }}>
- <h2 style={{ fontSize: '25px', color: 'gray' }}>Fuel Level</h2>
- <ResponsiveContainer width="100%" height={200} >
- <LineChart data={data} syncId="fuelChart" margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
- <CartesianGrid strokeDasharray="3 3" />
- <XAxis dataKey="TIME" />
- <YAxis label={{ value: 'Fuel (%)', angle: -90, position: 'insideLeft' }} domain={[0, 100]} tickCount={6} />
- <Tooltip />
- <Line type="monotone" dataKey="FUEL_LEVEL" stroke="#8884d8" fill="#8884d8" isAnimationActive={false} animationDuration={0} />
- <Brush height={20} />
- </LineChart>
- </ResponsiveContainer>
+  <h2 style={{ fontSize: '25px', color: 'gray' }}>Cumulative HMR ({cumulativeHMR})</h2>
+<ResponsiveContainer width="100%" height={200}>
+<AreaChart
+  data={hmrGraph}
+  syncId="rpmChart"
+  margin={{ top: 10, right: 0, left: 30, bottom: 0 }}
+>
+  <CartesianGrid strokeDasharray="3 3" />
+
+  <XAxis
+    dataKey="date"
+    ticks={[
+      hmrGraph[0]?.date,
+      hmrGraph[hmrGraph.length - 1]?.date
+    ]}
+    label={{
+      value: "Date",
+      position: "insideBottom",
+      offset: -10
+    }}
+  />
+
+  <YAxis
+    width={48}
+    domain={[0, 3000]}
+    tickCount={6}
+    tickFormatter={(value) => {
+      const hours = Math.floor(value / 3600);
+      const minutes = Math.floor((value % 3600) / 60);
+      const seconds = value % 60;
+
+      return [
+        hours.toString().padStart(2, "0"),
+        minutes.toString().padStart(2, "0"),
+        seconds.toString().padStart(2, "0")
+      ].join(":");
+    }}
+  />
+
+  <Tooltip
+    formatter={(value, name, item: any) => [
+      item.payload.labelHMR,
+      "Total HMR"
+    ]}
+  />
+
+  <Area
+    type="monotone"
+    dataKey="hmr"
+    stroke="#82ca9d"
+    fill="#82ca9d"
+    isAnimationActive={false}
+    animationDuration={0}
+  />
+
+  {/* <Brush
+    height={20}
+    startIndex={brushIndices.startIndex}
+    onChange={handleBrushChange}
+  /> */}
+</AreaChart>
+</ResponsiveContainer>
+
 
  <h2 style={{ fontSize: '25px', color: 'gray' }}>Speed</h2>
  <ResponsiveContainer width="100%" height={200}>
- <LineChart data={data} syncId="speedChart" margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+ <LineChart data={data} syncId="speedChart" margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
  <CartesianGrid strokeDasharray="3 3" />
  <XAxis dataKey="TIME" />
  <YAxis label={{ value: 'km/h', angle: -90, position: 'insideLeft' }} domain={[0, 60]} tickCount={6} />
@@ -786,7 +894,7 @@ setHealedDTCs(healed)
 
  <h2 style={{ fontSize: '25px', color: 'gray' }}>RPM</h2>
  <ResponsiveContainer width="100%" height={200}>
- <AreaChart data={data} syncId="rpmChart" margin={{ top: 10, right: 50, left: 0, bottom: 20 }}>
+ <AreaChart data={data} syncId="rpmChart" margin={{ top: 10, right: 0, left: 0, bottom: 20 }}>
  <CartesianGrid strokeDasharray="3 3" />
  <XAxis dataKey="TIME" />
  <YAxis label={{ value: 'RPM', angle: -90, position: 'insideLeft' }} domain={[0, 3500]} tickCount={6} />
@@ -794,6 +902,18 @@ setHealedDTCs(healed)
  <Area type="monotone" dataKey="ENGINE_RPM" stroke="#82ca9d" fill="#82ca9d" isAnimationActive={false} animationDuration={0} />
  <Brush height={20} />
  </AreaChart>
+ </ResponsiveContainer>
+
+  <h2 style={{ fontSize: '25px', color: 'gray' }}>Fuel Level</h2>
+ <ResponsiveContainer width="100%" height={200} >
+ <LineChart data={data} syncId="fuelChart" margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+ <CartesianGrid strokeDasharray="3 3" />
+ <XAxis dataKey="TIME" />
+ <YAxis label={{ value: 'Fuel (%)', angle: -90, position: 'insideLeft' }} domain={[0, 100]} tickCount={6} />
+ <Tooltip />
+ <Line type="monotone" dataKey="FUEL_LEVEL" stroke="#8884d8" fill="#8884d8" isAnimationActive={false} animationDuration={0} />
+ <Brush height={20} />
+ </LineChart>
  </ResponsiveContainer>
  </div>
  </div>
