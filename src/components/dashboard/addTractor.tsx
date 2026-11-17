@@ -35,10 +35,11 @@ export type Values = zod.infer<typeof schema>;
 interface addTractorProps {
  setModal: React.Dispatch<React.SetStateAction<boolean>>;
  setAddTractorAlert: React.Dispatch<React.SetStateAction<boolean>>;
+ setDuplicateAlert: React.Dispatch<React.SetStateAction<boolean>>;
  setFaidAddTractorAlert: React.Dispatch<React.SetStateAction<boolean>>;
  }
 
- const AddTractor: React.FC<addTractorProps> = ({setModal, setAddTractorAlert,setFaidAddTractorAlert}) => {
+ const AddTractor: React.FC<addTractorProps> = ({setModal, setAddTractorAlert,setDuplicateAlert, setFaidAddTractorAlert}) => {
  const [isPending, setIsPending] = useState<boolean>();
  const [farmAlert, setFarmAlert] = useState<boolean>(false);
 
@@ -69,10 +70,14 @@ const res = await axios.post(
  setModal(false)
  setAddTractorAlert(true)
  }
+ else if(res?.data?.success == false && res?.data?.duplicates == true){
+ setModal(false)
+ setDuplicateAlert(true);
+ }
  else{
  setModal(false)
  setFaidAddTractorAlert(true);
- }
+}
  }
  catch (err) {
  console.log(err);

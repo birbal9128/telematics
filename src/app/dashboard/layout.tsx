@@ -1,5 +1,6 @@
 "use client";
 
+import { AuthGuard } from "@/components/auth/auth-guard";
 import { useSidebar } from "@/context/SidebarContext";
 import AppHeader from "@/layout/AppHeader";
 import AppSidebar from "@/layout/AppSidebar";
@@ -21,6 +22,7 @@ export default function AdminLayout({
     : "lg:ml-[90px]";
 
   return (
+    <AuthGuard>
     <div className="min-h-screen xl:flex">
       {/* Sidebar and Backdrop */}
       <AppSidebar />
@@ -35,5 +37,6 @@ export default function AdminLayout({
         <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">{children}</div>
       </div>
     </div>
+    </AuthGuard>
   );
 }

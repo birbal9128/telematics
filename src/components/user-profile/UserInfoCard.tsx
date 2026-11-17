@@ -10,7 +10,7 @@ export default function UserInfoCard() {
   const { isOpen, openModal, closeModal } = useModal();
   const handleSave = () => {
     // Handle save logic here
-    console.log("Saving changes...");
+    // console.log("vSaving changes...");
     closeModal();
   };
   return (
