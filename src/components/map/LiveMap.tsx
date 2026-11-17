@@ -345,10 +345,10 @@ useEffect(() => {
 
   const formattedDate = `${year.slice(2)}/${month}/${day}`;
 
-  console.log(formattedDate);
+  // console.log(formattedDate);
   const newTractorID = tractor_id.trim();
   const res = await axios.get(`https://fdcserver.escortskubota.com/telematics/device-data/${newTractorID}?date=${formattedDate}`);
-  console.log(res.data?.payloads)
+  // console.log(res.data?.payloads)
 
  if(res.status==200){
  let lastTimestamp: string | null = null; 
@@ -547,7 +547,7 @@ setHealedDTCs(healed)
  const fetchDetails = async () => {
  try {
  const res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/getTractorHistory/${tractor_id}`);
- console.log(res.data.resp)
+//  console.log(res.data.resp)
  setTableData(res.data.resp)
 // const tableData = res.data.resp.map((item: any) => ({
 //   date: item.date,
@@ -567,7 +567,7 @@ setHealedDTCs(healed)
       });
 
 setHmrGraph(tableData)
-console.log(secondsToHr(totalSeconds))
+// console.log(secondsToHr(totalSeconds))
 setCumulativeHMR(secondsToHr(totalSeconds))
 
  }
@@ -591,7 +591,7 @@ socket.onopen = () => {
 
 socket.onmessage = (event) => {
 try {
- console.log("Event data",event)
+//  console.log("Event data",event)
 //  console.log(tractor_id,typeof tractor_id);
  const data = JSON.parse(event?.data);
 //  console.log(data);
@@ -616,7 +616,7 @@ try {
  !isNaN(parseFloat(data["P0251-13"]))&&
  !isNaN(parseFloat(data["P0193-12"]))&&
  !isNaN(parseFloat(data["P0183-00"]))) {
- console.log(data)
+//  console.log(data)
  setData((prevData) => {
  const updatedData = [
  ...prevData,
@@ -761,7 +761,7 @@ useEffect(()=>{
  const lat2 = parseFloat(secondLast?.LATITUDE);
  const lon2 = parseFloat(secondLast?.LONGITUDE);
  if(last?.TIME != "Error: Invalid time format" && secondLast?.TIME != "Error: Invalid time format"){
-  console.log("in in in")
+  // console.log("in in in")
   const dif = timeToSeconds(last?.TIME) - timeToSeconds(secondLast?.TIME)
   if(lat1 != lat2 || lon1 != lon2){
     if(dif<=600 && dif > 0 ){

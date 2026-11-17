@@ -3,10 +3,9 @@
     "version": "2.0.1",
     "private": true,
     "scripts": {
-        "dev": "next dev",
-        "build": "next build",
-        "start": "next start",
-        "lint": "next lint"
+        "dev": "next dev --webpack",
+        "build": "next build --webpack",
+        "start": "next start"
     },
     "dependencies": {
         "@emotion/react": "^11.14.0",
@@ -21,6 +20,7 @@
         "@mui/icons-material": "^7.0.1",
         "@mui/material": "^7.0.1",
         "@mui/x-date-pickers": "^8.25.0",
+        "@phosphor-icons/react": "^2.1.10",
         "@react-jvectormap/core": "^1.0.4",
         "@react-jvectormap/world": "^1.1.2",
         "@tailwindcss/forms": "^0.5.9",
@@ -35,7 +35,7 @@
         "flatpickr": "^4.6.13",
         "leaflet": "^1.9.4",
         "moment-timezone": "^0.5.48",
-        "next": "^15.2.2",
+        "next": "^16.4.6",
         "react": "^19.0.0",
         "react-apexcharts": "^1.7.0",
         "react-dnd": "^16.0.1",
@@ -46,9 +46,9 @@
         "react-hook-form": "^7.55.0",
         "react-leaflet": "^5.0.0",
         "recharts": "^2.15.1",
-        "swiper": "^11.2.0",
+        "swiper": "^14.4.0",
         "tailwind-merge": "^2.6.0",
-        "zod": "^3.24.2"
+        "zod": "^4.6.7"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3",

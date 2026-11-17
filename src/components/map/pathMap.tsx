@@ -267,7 +267,7 @@ async function getLocationFromCoordinates(
  const fetchDetails = async () => {
  try {
  const res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/getTractorHistory/${tractor_id}`);
- console.log(res.data.resp)
+//  console.log(res.data.resp)
   let totalSeconds=0
       const tableData = res.data.resp.map((item: any) => {
         const seconds = timeToSeconds1(item.hmr);
@@ -311,7 +311,7 @@ let apiData
   res = await axios.get(`https://fdcserver.escortskubota.com/fdc/tripData/historic?date=${date}&tractor_id=${tractor_id}`)
   apiData = res.data.result?.data
  }
- console.log(res)
+//  console.log(res)
  if(res?.status==200){
  function addTimeToCurrentTime(currentTime:string) {
  const additionalTime = "5:30"
@@ -389,7 +389,7 @@ const dataHMR = apiData.map((item: any) => {
  t.TIME === value.TIME
  ));
  });
- console.log("data for hmr",dataHMR)
+//  console.log("data for hmr",dataHMR)
 let newHMR = 0
 let counter = 0
 for (let i = 0; i < dataHMR.length - 1; i++) {
@@ -397,9 +397,9 @@ for (let i = 0; i < dataHMR.length - 1; i++) {
  const next = dataHMR[i + 1];
  if(next.TIME != "Error: Invalid time format" && current.TIME != "Error: Invalid time format" && isValidDateFormat(next.TIME) && isValidDateFormat(current.TIME)){
    if(next.ENGINE_RPM > 0 && current.ENGINE_RPM > 0){
-    console.log("current time",current.TIME,"next time",next.TIME)
+    // console.log("current time",current.TIME,"next time",next.TIME)
     const dif = timeToSeconds(next.TIME) - timeToSeconds(current.TIME)
-    console.log("time difference",dif)
+    // console.log("time difference",dif)
      if(dif<=600 && dif>0){
        newHMR += dif
       }
@@ -408,26 +408,26 @@ for (let i = 0; i < dataHMR.length - 1; i++) {
 
  }
 
- console.log("new hmr",secondsToTime(newHMR))
+ // console.log("new hmr",secondsToTime(newHMR))
 setNewHMR(secondsToTime(newHMR))
 
 
  setData(newData)
- console.log(newData)
+ // console.log(newData)
  const allData = newData
- console.log(allData)
+//  console.log(allData)
  let totalDistance = 0
  let allDataLength = allData.length
  let lastPostion = allData[allDataLength-1]
- console.log(lastPostion)
+ // console.log(lastPostion)
  const latitude = parseFloat(lastPostion?.LATITUDE); 
  const longitude = parseFloat(lastPostion?.LONGITUDE);
- console.log(latitude,longitude)
+//  console.log(latitude,longitude)
  const location = await getLocationFromCoordinates(latitude, longitude);
  const locationArray = location.split(",")
  let active=0,healed=0;
  setLocation(locationArray)
- console.log(allData)
+//  console.log(allData)
  setDtcData(()=>{
   return [
       { code: 'P0183-00', status: lastPostion?.["P0183_00"], description:'Water in fuel'},
@@ -482,7 +482,7 @@ setHealedDTCs(healed)
  
  totalDistance += haversineDistance(lat1, lon1, lat2, lon2);
  }
- console.log(secondsToTime(HMR))
+//  console.log(secondsToTime(HMR))
  setHMR(secondsToTime(HMR))
  setDistance(totalDistance)
  setIsPending(false)
@@ -505,7 +505,7 @@ setHealedDTCs(healed)
  // Only set center position when positions array is updated
  if (data?.length > 0) {
  const positions:LatLngTuple[] = data.map(point => [parseFloat(point.LATITUDE), parseFloat(point.LONGITUDE)]);
- console.log(positions)
+//  console.log(positions)
  setPosition(positions)
  const time = data.map(point => point.TIME)
  setTime(time)
@@ -518,12 +518,12 @@ setHealedDTCs(healed)
 
  useEffect(() => {
  // Only set center position when positions array is updated
- console.log(position)
- console.log("Yes sir i am running")
+//  console.log(position)
+//  console.log("Yes sir i am running")
  if (position?.length > 0) {
- console.log("Yes sir i am running inside loop")
+//  console.log("Yes sir i am running inside loop")
  const latestPosition: LatLngTuple = [position[0][0],position[0][1]]; // Get the latest position from the array
- console.log(latestPosition)
+//  console.log(latestPosition)
  setCenterPosition(latestPosition); // Only update center position if it changes
  }
  }, [position]);
